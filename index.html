@@ -950,6 +950,57 @@ input:focus-visible { outline: none; }
   opacity: 1;
 }
 
+/* === Swap Unit Transition === */
+.converter__input-section,
+.converter__result-section {
+  transition: transform var(--duration-slow) var(--ease-spring),
+              opacity var(--duration-med) var(--ease-out);
+}
+
+.converter__input-section.swap-up {
+  transform: translateY(calc(-100% - 52px - var(--spacing-lg) * 2));
+}
+
+.converter__result-section.swap-down {
+  transform: translateY(calc(100% + 52px + var(--spacing-lg) * 2));
+}
+
+.converter__input-section.swap-instant,
+.converter__result-section.swap-instant {
+  transition: none !important;
+}
+
+/* === Rates Toast === */
+.rates-toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: var(--green);
+  color: #000;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 20px;
+  border-radius: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-med) var(--ease-out),
+              transform var(--duration-med) var(--ease-spring);
+  z-index: 200;
+  box-shadow: 0 4px 16px rgba(48, 209, 88, 0.3);
+}
+
+.rates-toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* === CountUp result === */
+.converter__result-input.counting-up {
+  transition: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -1029,6 +1080,7 @@ input:focus-visible { outline: none; }
     </div>
   </div>
   <div class="global-toast" id="global-toast"></div>
+  <div class="rates-toast" id="rates-toast">Rates updated</div>
 </div>
 
 <script>
@@ -1355,6 +1407,7 @@ input:focus-visible { outline: none; }
           };
           saveCachedRates(cacheEntry);
           applyCurrencyRates(cacheEntry);
+          showRatesToast();
         }
       })
       .catch(function() {
@@ -1395,6 +1448,42 @@ input:focus-visible { outline: none; }
     el.classList.add('converter__result-input--flash');
   }
 
+  // === CountUp animation ===
+  var countUpRAF = null;
+  function animateCountUp(el, targetValue, duration) {
+    if (countUpRAF) cancelAnimationFrame(countUpRAF);
+    if (!isFinite(targetValue) || targetValue === 0) {
+      el.value = formatNumber(targetValue);
+      return;
+    }
+    // Check reduced motion preference
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      el.value = formatNumber(targetValue);
+      return;
+    }
+    var startTime = null;
+    var startValue = 0;
+    el.classList.add('counting-up');
+    function step(timestamp) {
+      if (!startTime) startTime = timestamp;
+      var progress = Math.min((timestamp - startTime) / duration, 1);
+      // Ease out cubic
+      var eased = 1 - Math.pow(1 - progress, 3);
+      var current = startValue + (targetValue - startValue) * eased;
+      el.value = formatNumber(current);
+      if (progress < 1) {
+        countUpRAF = requestAnimationFrame(step);
+      } else {
+        el.value = formatNumber(targetValue);
+        el.classList.remove('counting-up');
+        countUpRAF = null;
+      }
+    }
+    countUpRAF = requestAnimationFrame(step);
+  }
+
+  var skipCountUp = false; // flag to skip animation during typing
+
   function doConversion() {
     var $exprHint = document.getElementById('expr-hint-from');
     if (lastEditedField === 'from') {
@@ -1409,9 +1498,14 @@ input:focus-visible { outline: none; }
       var val = parseInput($inputFrom.value);
       if (val === null) {
         $inputTo.value = '';
+        if (countUpRAF) { cancelAnimationFrame(countUpRAF); countUpRAF = null; }
       } else {
         var result = convert(val, fromUnit, toUnit, currentCategory);
-        $inputTo.value = formatNumber(result);
+        if (skipCountUp) {
+          $inputTo.value = formatNumber(result);
+        } else {
+          animateCountUp($inputTo, result, 500);
+        }
         flashResult($inputTo);
       }
     } else {
@@ -1419,9 +1513,14 @@ input:focus-visible { outline: none; }
       var val = parseInput($inputTo.value);
       if (val === null) {
         $inputFrom.value = '';
+        if (countUpRAF) { cancelAnimationFrame(countUpRAF); countUpRAF = null; }
       } else {
         var result = convert(val, toUnit, fromUnit, currentCategory);
-        $inputFrom.value = formatNumber(result);
+        if (skipCountUp) {
+          $inputFrom.value = formatNumber(result);
+        } else {
+          animateCountUp($inputFrom, result, 500);
+        }
         flashResult($inputFrom);
       }
     }
@@ -1642,24 +1741,57 @@ input:focus-visible { outline: none; }
   }
 
   // === Swap ===
+  var $inputSection = document.querySelector('.converter__input-section');
+  var $resultSection = document.querySelector('.converter__result-section');
+
   function doSwap() {
-    // Animate button
+    // Animate button rotation
     $swapBtn.classList.add('swap-btn--rotating');
 
-    // Swap units
-    var tmp = fromUnit;
-    fromUnit = toUnit;
-    toUnit = tmp;
+    // Animate sections: cross-fade swap
+    $inputSection.style.opacity = '0';
+    $inputSection.style.transform = 'translateY(20px)';
+    $resultSection.style.opacity = '0';
+    $resultSection.style.transform = 'translateY(-20px)';
 
-    // Swap values
-    var tmpVal = $inputFrom.value;
-    $inputFrom.value = $inputTo.value;
-    $inputTo.value = tmpVal;
+    setTimeout(function() {
+      // Swap units
+      var tmp = fromUnit;
+      fromUnit = toUnit;
+      toUnit = tmp;
 
-    // Keep lastEditedField the same
-    updatePills();
-    doConversion();
-    updateFavStar();
+      // Swap values
+      var tmpVal = $inputFrom.value;
+      $inputFrom.value = $inputTo.value;
+      $inputTo.value = tmpVal;
+
+      // Keep lastEditedField the same
+      updatePills();
+      skipCountUp = true;
+      doConversion();
+      skipCountUp = false;
+      updateFavStar();
+
+      // Animate back in from opposite directions
+      $inputSection.style.transform = 'translateY(-20px)';
+      $resultSection.style.transform = 'translateY(20px)';
+
+      requestAnimationFrame(function() {
+        $inputSection.style.transition = 'opacity var(--duration-med) var(--ease-out), transform var(--duration-med) var(--ease-spring)';
+        $resultSection.style.transition = 'opacity var(--duration-med) var(--ease-out), transform var(--duration-med) var(--ease-spring)';
+        $inputSection.style.opacity = '1';
+        $inputSection.style.transform = 'translateY(0)';
+        $resultSection.style.opacity = '1';
+        $resultSection.style.transform = 'translateY(0)';
+
+        setTimeout(function() {
+          $inputSection.style.transition = '';
+          $inputSection.style.transform = '';
+          $resultSection.style.transition = '';
+          $resultSection.style.transform = '';
+        }, 350);
+      });
+    }, 200);
 
     // Reset rotation after transition
     $swapBtn.addEventListener('transitionend', function handler() {
@@ -1685,12 +1817,16 @@ input:focus-visible { outline: none; }
   // === Event bindings ===
   $inputFrom.addEventListener('input', function() {
     lastEditedField = 'from';
+    skipCountUp = true;
     doConversion();
+    skipCountUp = false;
   });
 
   $inputTo.addEventListener('input', function() {
     lastEditedField = 'to';
+    skipCountUp = true;
     doConversion();
+    skipCountUp = false;
   });
 
   $inputFrom.addEventListener('blur', function() { cleanInput($inputFrom); });
@@ -1795,6 +1931,18 @@ input:focus-visible { outline: none; }
     globalToastTimer = setTimeout(function() {
       $globalToast.classList.remove('visible');
     }, 1500);
+  }
+
+  // === Rates Toast ===
+  var $ratesToast = document.getElementById('rates-toast');
+  var ratesToastTimer = null;
+
+  function showRatesToast() {
+    $ratesToast.classList.add('visible');
+    clearTimeout(ratesToastTimer);
+    ratesToastTimer = setTimeout(function() {
+      $ratesToast.classList.remove('visible');
+    }, 2000);
   }
 
   // === Share Button ===

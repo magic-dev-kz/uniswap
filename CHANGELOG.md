@@ -1,5 +1,37 @@
 # UniSwap — Changelog
 
+## v6.0 (2026-03-29) — "Polish & Motion"
+
+Quality polish by Mario.
+
+### Result CountUp Animation
+- Conversion result animates from 0 to the final value over 0.5s with ease-out cubic easing.
+- Animation skipped during continuous typing for responsive feel.
+- Respects `prefers-reduced-motion`.
+
+### Currency Rates Toast
+- When fresh rates are fetched from the API, a "Rates updated" toast slides in at the top of the screen.
+- Auto-dismisses after 2 seconds with smooth spring transition.
+
+### Swap Animation Enhancement
+- When pressing the swap button, input and result sections cross-fade with vertical slide.
+- Sections fade out in opposite directions, values swap, then sections fade back in from swapped positions.
+- Smooth spring easing for a polished feel.
+
+### Focus-Visible Audit
+- All interactive elements verified for `:focus-visible` outlines.
+- Global rule covers tabs, pills, overlay options, all-units rows, copy/share/star buttons, favorites, and history items.
+- Inputs use border-bottom glow instead of outline (intentional).
+
+### Technical
+- SW cache bumped to `uniswap-v6`.
+
+### Preserved
+- All existing features intact.
+- HTML structure and accessibility attributes unchanged.
+
+---
+
 ## v5.0 (2026-03-29) — "World Money & Smart Input"
 
 ### Added
