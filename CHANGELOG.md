@@ -1,5 +1,24 @@
 # UniSwap — Changelog
 
+## v9.0 (2026-03-29) — "Share, Polish & Icons"
+
+Feature update by Mario.
+
+### Share on Twitter/X
+- Share button now opens Twitter/X with pre-filled tweet: "X km = Y miles" + link (replaces clipboard copy)
+
+### Result Emphasis
+- Result input font bumped from 28px to 36px (40px on desktop) with heavier weight
+- Spring pop animation on every conversion result
+
+### Category Tab Icons
+- Emoji icons on each tab: Length, Weight, Temperature, Volume, Area, Currency
+
+### Service Worker
+- Cache version bumped to `uniswap-v9`
+
+---
+
 ## v8.0 (2026-03-29) — "Area & Quick Access"
 
 Feature update by Mario.

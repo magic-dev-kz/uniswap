@@ -191,14 +191,17 @@ body {
 }
 
 .converter__result-input {
-  font-size: 28px;
-  font-weight: 400;
+  font-size: 36px;
+  font-weight: 500;
   color: var(--accent);
   background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent), #fff 30%));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+/* v9: Spring pop on result */
+@keyframes resultSpringPop{0%{transform:scale(0.85);opacity:0.6}40%{transform:scale(1.08)}70%{transform:scale(0.97)}100%{transform:scale(1);opacity:1}}
+.converter__result-input.spring-pop{animation:resultSpringPop 0.5s cubic-bezier(0.34,1.56,0.64,1)}
 
 /* === Unit Pill === */
 .unit-pill {
@@ -510,7 +513,7 @@ input:focus-visible { outline: none; }
 /* === Responsive === */
 @media (max-width: 360px) {
   .converter__input { font-size: 28px; }
-  .converter__result-input { font-size: 22px; }
+  .converter__result-input { font-size: 28px; }
   .tab { font-size: 12px; padding: 8px 0; }
   .unit-overlay__grid { grid-template-columns: repeat(3, 1fr); }
   .all-units__name { min-width: 48px; }
@@ -520,7 +523,7 @@ input:focus-visible { outline: none; }
 @media (min-width: 600px) {
   body { padding: var(--spacing-xl); }
   .converter__input { font-size: 40px; }
-  .converter__result-input { font-size: 32px; }
+  .converter__result-input { font-size: 40px; }
   .app { padding: var(--spacing-lg); }
 }
 
@@ -1204,6 +1207,7 @@ input:focus-visible { outline: none; }
   }
 
   // === Data ===
+  var categoryIcons = {length:'\uD83D\uDCCF',weight:'\u2696\uFE0F',temp:'\uD83C\uDF21\uFE0F',volume:'\uD83E\uDDEA',area:'\uD83D\uDCD0',currency:'\uD83D\uDCB0'};
   const categories = {
     length: {
       name: 'Длина', accent: 'length', base: 'm',
@@ -1620,8 +1624,10 @@ input:focus-visible { outline: none; }
 
   function flashResult(el) {
     el.classList.remove('converter__result-input--flash');
+    el.classList.remove('spring-pop');
     void el.offsetWidth; // force reflow
     el.classList.add('converter__result-input--flash');
+    el.classList.add('spring-pop');
   }
 
   // === CountUp animation ===
@@ -1791,7 +1797,7 @@ input:focus-visible { outline: none; }
       btn.dataset.category = key;
       btn.setAttribute('aria-selected', key === currentCategory ? 'true' : 'false');
       btn.tabIndex = (key === currentCategory) ? 0 : -1;
-      btn.textContent = categories[key].name;
+      btn.innerHTML = '<span class="tab-icon" style="margin-right:2px;font-size:1.1em">' + (categoryIcons[key]||'') + '</span>' + categories[key].name;
       btn.addEventListener('click', function() { switchCategory(key); });
       $tabs.appendChild(btn);
     });
@@ -2132,10 +2138,9 @@ input:focus-visible { outline: none; }
     var c = categories[currentCategory];
     var fromName = c.units[fromUnit].name;
     var toName = c.units[toUnit].name;
-    var shareText = valFrom + ' ' + fromName + ' = ' + valTo + ' ' + toName + ' \u2014 via UniSwap';
-    copyText(shareText).then(function() {
-      showGlobalToast('Copied!');
-    });
+    var shareText = valFrom + ' ' + fromName + ' = ' + valTo + ' ' + toName + ' \uD83D\uDD04 https://magic-dev-kz.github.io/uniswap/';
+    var tweetUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText);
+    window.open(tweetUrl, '_blank', 'noopener,noreferrer');
   });
 
   // === Favorites ===
