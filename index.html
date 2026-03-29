@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Converter</title>
+<link rel="manifest" href="manifest.json">
+<meta property="og:title" content="UniSwap — Universal Unit Converter">
+<meta property="og:description" content="Convert anything: length, weight, temperature, volume. Clean, fast, offline. No ads.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="UniSwap — Universal Unit Converter">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+:root {
+  --bg:              #1C1C1E;
+  --bg-elevated:     #2C2C2E;
+  --bg-tertiary:     #3A3A3C;
+  --text-primary:    #FFFFFF;
+  --text-secondary:  #AEAEB2;
+  --blue:            #0A84FF;
+  --green:           #30D158;
+  --red:             #FF453A;
+  --orange:          #FF9F0A;
+  --gray:            #48484A;
+
+  --accent-length:   #0A84FF;
+  --accent-weight:   #FF9F0A;
+  --accent-temp:     #FF453A;
+  --accent-volume:   #64D2FF;
+
+  --accent-length-bg:  rgba(10, 132, 255, 0.10);
+  --accent-weight-bg:  rgba(255, 159, 10, 0.10);
+  --accent-temp-bg:    rgba(255, 69, 58, 0.10);
+  --accent-volume-bg:  rgba(100, 210, 255, 0.10);
+
+  --font-mono:       'SF Mono', 'Menlo', 'Consolas', monospace;
+  --font-sans:       -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --app-max-width:   400px;
+  --btn-height:      48px;
+  --btn-radius:      24px;
+  --tap-target:      44px;
+  --spacing-xs:      4px;
+  --spacing-sm:      8px;
+  --spacing-md:      16px;
+  --spacing-lg:      24px;
+  --spacing-xl:      32px;
+
+  --ease-out:        cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-spring:     cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast:   150ms;
+  --duration-med:    300ms;
+  --duration-slow:   500ms;
+
+  --accent:          var(--accent-length);
+  --accent-bg:       var(--accent-length-bg);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  display: flex;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: var(--spacing-md);
+  -webkit-font-smoothing: antialiased;
+}
+
+.app {
+  width: 100%;
+  max-width: var(--app-max-width);
+  padding: var(--spacing-md);
+}
+
+/* === Tabs === */
+.tabs {
+  display: flex;
+  gap: var(--spacing-xs);
+  background: var(--bg-elevated);
+  border-radius: 10px;
+  padding: 3px;
+  margin-bottom: var(--spacing-xl);
+}
+
+.tab {
+  flex: 1;
+  padding: 10px 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tab.active {
+  background: var(--accent);
+  color: #000000;
+}
+
+/* === Converter === */
+.converter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 1;
+  transition: opacity var(--duration-med) var(--ease-out);
+}
+
+.converter--fading { opacity: 0; }
+
+.converter__input-section,
+.converter__result-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.converter__input,
+.converter__result-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--gray);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 36px;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  padding: var(--spacing-sm) 0;
+  outline: none;
+  caret-color: var(--accent);
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+
+.converter__input:focus,
+.converter__result-input:focus {
+  border-bottom-color: var(--accent);
+}
+
+.converter__input::placeholder,
+.converter__result-input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+.converter__result-input {
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--accent);
+}
+
+/* === Unit Pill === */
+.unit-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  height: var(--tap-target);
+  padding: 0 var(--spacing-md);
+  background: var(--bg-elevated);
+  border: 1.5px solid var(--gray);
+  border-radius: 22px;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 12px;
+  transition: border-color var(--duration-fast) var(--ease-out),
+              background var(--duration-fast) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.unit-pill:hover,
+.unit-pill:focus-visible {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.unit-pill__arrow {
+  font-size: 12px;
+  color: var(--text-secondary);
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+/* === Swap === */
+.swap-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-target);
+  height: var(--tap-target);
+  border-radius: 50%;
+  border: 1.5px solid var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent);
+  cursor: pointer;
+  margin: var(--spacing-md) auto;
+  transition: transform var(--duration-med) var(--ease-spring),
+              border-color var(--duration-fast) var(--ease-out),
+              color var(--duration-fast) var(--ease-out),
+              background var(--duration-fast) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.swap-btn:hover,
+.swap-btn:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.swap-btn:active {
+  transform: scale(0.9);
+}
+
+.swap-btn--rotating {
+  transform: rotate(180deg);
+  transition: transform var(--duration-med) var(--ease-spring);
+}
+
+/* === All Units === */
+.all-units {
+  width: 100%;
+  margin-top: 32px;
+  background: var(--bg-elevated);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.all-units__header {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.all-units__row {
+  display: flex;
+  align-items: center;
+  padding: 10px var(--spacing-md);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.all-units__row:hover,
+.all-units__row:focus-visible {
+  background: var(--bg-tertiary);
+}
+
+.all-units__name {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--text-secondary);
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.all-units__value {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  flex: 1;
+  text-align: right;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.all-units__row--copied {
+  background: rgba(48, 209, 88, 0.15) !important;
+}
+
+.all-units__copied {
+  position: absolute;
+  right: var(--spacing-md);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity var(--duration-fast) var(--ease-out),
+              transform var(--duration-fast) var(--ease-out);
+  pointer-events: none;
+}
+
+.all-units__row--copied .all-units__copied {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.all-units__row--copied .all-units__value {
+  opacity: 0;
+}
+
+/* === Unit Overlay === */
+.unit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.unit-overlay[hidden] { display: none; }
+
+.unit-overlay__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  animation: fade-in var(--duration-fast) var(--ease-out);
+}
+
+.unit-overlay__panel {
+  position: relative;
+  width: 100%;
+  max-width: var(--app-max-width);
+  background: var(--bg-elevated);
+  border-radius: 16px 16px 0 0;
+  padding: var(--spacing-lg);
+  padding-bottom: calc(var(--spacing-lg) + env(safe-area-inset-bottom, 0px));
+  animation: slide-up var(--duration-med) var(--ease-out);
+}
+
+.unit-overlay__title {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-md);
+  text-align: center;
+}
+
+.unit-overlay__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-sm);
+}
+
+.unit-overlay__option {
+  height: var(--tap-target);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1.5px solid var(--gray);
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.unit-overlay__option:hover,
+.unit-overlay__option:focus-visible {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.unit-overlay__option--active {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #000000;
+  font-weight: 600;
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes value-flash {
+  0%   { opacity: 1; }
+  30%  { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+.converter__result-input--flash {
+  animation: value-flash 200ms var(--ease-out);
+}
+
+/* === Focus visible === */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+input:focus-visible { outline: none; }
+
+/* === Responsive === */
+@media (max-width: 360px) {
+  .converter__input { font-size: 28px; }
+  .converter__result-input { font-size: 22px; }
+  .tab { font-size: 13px; padding: 8px 0; }
+  .unit-overlay__grid { grid-template-columns: repeat(3, 1fr); }
+  .all-units__name { min-width: 48px; }
+}
+
+@media (min-width: 600px) {
+  body { padding: var(--spacing-xl); }
+  .converter__input { font-size: 40px; }
+  .converter__result-input { font-size: 32px; }
+}
+
+/* === Onboarding Tooltip === */
+.onboarding-tooltip {
+  position: relative;
+  text-align: center;
+  margin-top: -20px;
+  margin-bottom: var(--spacing-md);
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity var(--duration-med) var(--ease-out), transform var(--duration-med) var(--ease-out);
+  pointer-events: none;
+}
+
+.onboarding-tooltip.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.onboarding-tooltip__inner {
+  display: inline-block;
+  background: var(--bg-elevated);
+  border: 1px solid var(--gray);
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* === Copy Result Button === */
+.converter__result-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: var(--spacing-xs);
+}
+
+.converter__result-row .converter__result-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.copy-result-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid var(--gray);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+}
+
+.copy-result-btn:hover,
+.copy-result-btn:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.copy-result-btn__toast {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--green);
+  color: #000;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.copy-result-btn__toast.visible {
+  opacity: 1;
+}
+
+/* === Favorites === */
+.favorites {
+  width: 100%;
+  margin-top: var(--spacing-lg);
+}
+
+.favorites[hidden] { display: none; }
+
+.favorites__header {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.favorites__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.favorites__item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 10px var(--spacing-md);
+  background: var(--bg-elevated);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.favorites__item:hover,
+.favorites__item:focus-visible {
+  background: var(--bg-tertiary);
+}
+
+.favorites__item-text {
+  flex: 1;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.favorites__item-cat {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-left: var(--spacing-xs);
+}
+
+.favorites__remove {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 16px;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.favorites__remove:hover,
+.favorites__remove:focus-visible {
+  background: rgba(255, 69, 58, 0.15);
+  color: var(--red);
+}
+
+.fav-star-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-target);
+  height: var(--tap-target);
+  border-radius: 50%;
+  border: 1.5px solid var(--gray);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 20px;
+  cursor: pointer;
+  margin-top: var(--spacing-sm);
+  transition: all var(--duration-fast) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fav-star-btn:hover,
+.fav-star-btn:focus-visible {
+  border-color: var(--orange);
+  color: var(--orange);
+  background: var(--accent-weight-bg);
+}
+
+.fav-star-btn.active {
+  color: var(--orange);
+  border-color: var(--orange);
+  background: var(--accent-weight-bg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div class="onboarding-tooltip" id="onboarding-tooltip">
+    <div class="onboarding-tooltip__inner">Переключайтесь между категориями &#8593;</div>
+  </div>
+  <div class="converter" role="tabpanel" id="converter">
+    <div class="converter__input-section">
+      <input type="text" inputmode="decimal" class="converter__input" id="input-from" value="1" autocomplete="off" autofocus aria-label="Исходное значение">
+      <button class="unit-pill" id="pill-from" aria-haspopup="listbox">
+        <span class="unit-pill__label" id="pill-from-label"></span>
+        <span class="unit-pill__arrow">&#9662;</span>
+      </button>
+    </div>
+    <button class="swap-btn" id="swap-btn" aria-label="Поменять единицы местами">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 4v16M7 4l-3 3M7 4l3 3"/>
+        <path d="M17 20V4M17 20l-3-3M17 20l3-3"/>
+      </svg>
+    </button>
+    <div class="converter__result-section">
+      <div class="converter__result-row">
+        <input type="text" inputmode="decimal" class="converter__result-input" id="input-to" autocomplete="off" aria-label="Результат" aria-live="polite">
+        <button class="copy-result-btn" id="copy-result-btn" aria-label="Копировать результат">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          <span class="copy-result-btn__toast" id="copy-toast">Скопировано!</span>
+        </button>
+      </div>
+      <button class="unit-pill" id="pill-to" aria-haspopup="listbox">
+        <span class="unit-pill__label" id="pill-to-label"></span>
+        <span class="unit-pill__arrow">&#9662;</span>
+      </button>
+    </div>
+    <button class="fav-star-btn" id="fav-star-btn" aria-label="Добавить в избранное">&#9733;</button>
+    <div class="favorites" id="favorites" hidden>
+      <div class="favorites__header">Избранное</div>
+      <div class="favorites__list" id="favorites-list"></div>
+    </div>
+    <div class="all-units" id="all-units">
+      <div class="all-units__header">Все единицы</div>
+      <div id="all-units-list"></div>
+    </div>
+  </div>
+  <div class="unit-overlay" id="unit-overlay" hidden role="dialog" aria-modal="true" aria-label="Выбор единицы измерения">
+    <div class="unit-overlay__backdrop" id="overlay-backdrop"></div>
+    <div class="unit-overlay__panel">
+      <div class="unit-overlay__title">Выберите единицу</div>
+      <div class="unit-overlay__grid" id="unit-grid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // === Data ===
+  const categories = {
+    length: {
+      name: 'Длина', accent: 'length', base: 'm',
+      units: {
+        mm:  { name: 'мм',     full: 'миллиметры', factor: 0.001 },
+        cm:  { name: 'см',     full: 'сантиметры', factor: 0.01 },
+        m:   { name: 'м',      full: 'метры',      factor: 1 },
+        km:  { name: 'км',     full: 'километры',  factor: 1000 },
+        in:  { name: 'дюймы',  full: 'дюймы',      factor: 0.0254 },
+        ft:  { name: 'футы',   full: 'футы',       factor: 0.3048 },
+        yd:  { name: 'ярды',   full: 'ярды',       factor: 0.9144 },
+        mi:  { name: 'мили',   full: 'мили',       factor: 1609.344 },
+      },
+      defaultFrom: 'km', defaultTo: 'mi'
+    },
+    weight: {
+      name: 'Вес', accent: 'weight', base: 'g',
+      units: {
+        mg:  { name: 'мг',     full: 'миллиграммы', factor: 0.001 },
+        g:   { name: 'г',      full: 'граммы',      factor: 1 },
+        kg:  { name: 'кг',     full: 'килограммы',   factor: 1000 },
+        lb:  { name: 'фунты',  full: 'фунты',       factor: 453.592 },
+        oz:  { name: 'унции',  full: 'унции',       factor: 28.3495 },
+      },
+      defaultFrom: 'kg', defaultTo: 'lb'
+    },
+    temp: {
+      name: 'Темп.', accent: 'temp',
+      units: {
+        C: { name: '°C', full: 'Цельсий' },
+        F: { name: '°F', full: 'Фаренгейт' },
+        K: { name: 'K',  full: 'Кельвин' },
+      },
+      defaultFrom: 'C', defaultTo: 'F',
+    },
+    volume: {
+      name: 'Объём', accent: 'volume', base: 'ml',
+      units: {
+        ml:  { name: 'мл',    full: 'миллилитры', factor: 1 },
+        l:   { name: 'л',     full: 'литры',      factor: 1000 },
+        gal: { name: 'гал',   full: 'галлоны US', factor: 3785.41 },
+        cup: { name: 'чашки', full: 'чашки US',   factor: 236.588 },
+      },
+      defaultFrom: 'l', defaultTo: 'gal'
+    }
+  };
+
+  // Temperature conversion via intermediate Celsius
+  function tempToC(value, from) {
+    if (from === 'C') return value;
+    if (from === 'F') return (value - 32) * 5 / 9;
+    if (from === 'K') return value - 273.15;
+    return value;
+  }
+
+  function cToTemp(celsius, to) {
+    if (to === 'C') return celsius;
+    if (to === 'F') return celsius * 9 / 5 + 32;
+    if (to === 'K') return celsius + 273.15;
+    return celsius;
+  }
+
+  function convertTemp(value, from, to) {
+    if (from === to) return value;
+    return cToTemp(tempToC(value, from), to);
+  }
+
+  function convertFactor(value, fromFactor, toFactor) {
+    return value * fromFactor / toFactor;
+  }
+
+  // === State ===
+  let currentCategory = 'length';
+  let fromUnit = 'km';
+  let toUnit = 'mi';
+  let lastEditedField = 'from'; // track which field was last edited
+  let overlayTarget = null; // 'from' or 'to'
+
+  // === DOM refs ===
+  const $tabs = document.getElementById('tabs');
+  const $converter = document.getElementById('converter');
+  const $inputFrom = document.getElementById('input-from');
+  const $inputTo = document.getElementById('input-to');
+  const $pillFrom = document.getElementById('pill-from');
+  const $pillTo = document.getElementById('pill-to');
+  const $pillFromLabel = document.getElementById('pill-from-label');
+  const $pillToLabel = document.getElementById('pill-to-label');
+  const $swapBtn = document.getElementById('swap-btn');
+  const $allUnitsList = document.getElementById('all-units-list');
+  const $overlay = document.getElementById('unit-overlay');
+  const $overlayBackdrop = document.getElementById('overlay-backdrop');
+  const $unitGrid = document.getElementById('unit-grid');
+
+  // === Number formatting ===
+  function formatNumber(num) {
+    if (!isFinite(num)) return '--';
+    if (num === 0) return '0';
+
+    // 6 significant digits, avoid scientific notation
+    var result = Number(num.toPrecision(6));
+
+    // Convert to string without scientific notation
+    var str;
+    if (Math.abs(result) >= 1e-6 && Math.abs(result) < 1e21) {
+      str = result.toString();
+    } else {
+      // For very large/small numbers, use toFixed then trim
+      var decimals = Math.max(0, 6 - Math.floor(Math.log10(Math.abs(result))) - 1);
+      str = result.toFixed(Math.min(decimals, 20));
+    }
+    // Trim trailing zeros after decimal point
+    if (str.indexOf('.') !== -1) {
+      str = str.replace(/0+$/, '').replace(/\.$/, '');
+    }
+
+    // Split integer and decimal
+    var parts = str.split('.');
+    var intPart = parts[0];
+    var decPart = parts[1] || '';
+
+    // Add space thousands separator
+    var negative = false;
+    if (intPart[0] === '-') {
+      negative = true;
+      intPart = intPart.slice(1);
+    }
+
+    var formatted = '';
+    for (var i = intPart.length - 1, count = 0; i >= 0; i--, count++) {
+      if (count > 0 && count % 3 === 0) formatted = ' ' + formatted;
+      formatted = intPart[i] + formatted;
+    }
+
+    if (negative) formatted = '-' + formatted;
+    if (decPart) formatted += '.' + decPart;
+
+    return formatted;
+  }
+
+  // Parse user input: strip spaces, allow minus and decimal point
+  function parseInput(str) {
+    if (!str || str.trim() === '' || str.trim() === '-') return null;
+    var cleaned = str.replace(/\s/g, '').replace(',', '.');
+    var num = parseFloat(cleaned);
+    return isNaN(num) ? null : num;
+  }
+
+  // === Conversion logic ===
+  function convert(value, from, to, cat) {
+    if (value === null) return null;
+    var c = categories[cat];
+    if (cat === 'temp') {
+      return convertTemp(value, from, to);
+    }
+    var fromFactor = c.units[from].factor;
+    var toFactor = c.units[to].factor;
+    return convertFactor(value, fromFactor, toFactor);
+  }
+
+  // === UI Updates ===
+  function updatePills() {
+    var c = categories[currentCategory];
+    $pillFromLabel.textContent = c.units[fromUnit].full || c.units[fromUnit].name;
+    $pillToLabel.textContent = c.units[toUnit].full || c.units[toUnit].name;
+  }
+
+  function flashResult(el) {
+    el.classList.remove('converter__result-input--flash');
+    void el.offsetWidth; // force reflow
+    el.classList.add('converter__result-input--flash');
+  }
+
+  function doConversion() {
+    if (lastEditedField === 'from') {
+      var val = parseInput($inputFrom.value);
+      if (val === null) {
+        $inputTo.value = '';
+      } else {
+        var result = convert(val, fromUnit, toUnit, currentCategory);
+        $inputTo.value = formatNumber(result);
+        flashResult($inputTo);
+      }
+    } else {
+      var val = parseInput($inputTo.value);
+      if (val === null) {
+        $inputFrom.value = '';
+      } else {
+        var result = convert(val, toUnit, fromUnit, currentCategory);
+        $inputFrom.value = formatNumber(result);
+        flashResult($inputFrom);
+      }
+    }
+    updateAllUnits();
+  }
+
+  // Build DOM for all-units list once per category switch
+  function buildAllUnitsDOM() {
+    var c = categories[currentCategory];
+    $allUnitsList.innerHTML = '';
+    var unitKeys = Object.keys(c.units);
+    unitKeys.forEach(function(key) {
+      var unit = c.units[key];
+      var row = document.createElement('div');
+      row.className = 'all-units__row';
+      row.tabIndex = 0;
+      row.dataset.unit = key;
+      row.dataset.value = '';
+
+      row.innerHTML =
+        '<span class="all-units__name">' + unit.name + '</span>' +
+        '<span class="all-units__value">\u2014</span>' +
+        '<span class="all-units__copied">Скопировано</span>';
+
+      row.addEventListener('click', function() { copyRow(row); });
+      row.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); copyRow(row); }
+      });
+
+      $allUnitsList.appendChild(row);
+    });
+  }
+
+  // Update only textContent of existing rows (no DOM rebuild)
+  function updateAllUnits() {
+    var c = categories[currentCategory];
+    var sourceField = lastEditedField === 'from' ? $inputFrom : $inputTo;
+    var sourceUnit = lastEditedField === 'from' ? fromUnit : toUnit;
+    var val = parseInput(sourceField.value);
+
+    var rows = $allUnitsList.querySelectorAll('.all-units__row');
+    rows.forEach(function(row) {
+      var key = row.dataset.unit;
+      var converted = (val === null) ? null : convert(val, sourceUnit, key, currentCategory);
+      var displayVal = (converted === null) ? '\u2014' : formatNumber(converted);
+      row.dataset.value = (converted === null) ? '' : converted.toString();
+      row.querySelector('.all-units__value').textContent = displayVal;
+    });
+  }
+
+  function copyRow(row) {
+    var valueEl = row.querySelector('.all-units__value');
+    var text = valueEl.textContent;
+    if (text === '--' || text === '\u2014') return;
+
+    // Clipboard
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).catch(function() {});
+    } else {
+      // Fallback
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch(e) {}
+      document.body.removeChild(ta);
+    }
+
+    // Flash
+    row.classList.add('all-units__row--copied');
+    setTimeout(function() {
+      row.classList.remove('all-units__row--copied');
+    }, 600);
+  }
+
+  // === Accent color ===
+  function setAccent(cat) {
+    var root = document.documentElement.style;
+    root.setProperty('--accent', 'var(--accent-' + cat + ')');
+    root.setProperty('--accent-bg', 'var(--accent-' + cat + '-bg)');
+  }
+
+  // === Tabs ===
+  function buildTabs() {
+    $tabs.innerHTML = '';
+    Object.keys(categories).forEach(function(key) {
+      var btn = document.createElement('button');
+      btn.className = 'tab' + (key === currentCategory ? ' active' : '');
+      btn.role = 'tab';
+      btn.dataset.category = key;
+      btn.setAttribute('aria-selected', key === currentCategory ? 'true' : 'false');
+      btn.tabIndex = (key === currentCategory) ? 0 : -1;
+      btn.textContent = categories[key].name;
+      btn.addEventListener('click', function() { switchCategory(key); });
+      $tabs.appendChild(btn);
+    });
+  }
+
+  function switchCategory(cat) {
+    if (cat === currentCategory) return;
+
+    // Remove active from current tab
+    var tabs = $tabs.querySelectorAll('.tab');
+    tabs.forEach(function(t) {
+      t.classList.remove('active');
+      t.setAttribute('aria-selected', 'false');
+      t.tabIndex = -1;
+    });
+
+    // Fade out
+    $converter.classList.add('converter--fading');
+
+    currentCategory = cat;
+    var c = categories[cat];
+    fromUnit = c.defaultFrom;
+    toUnit = c.defaultTo;
+
+    setTimeout(function() {
+      // Activate new tab
+      tabs.forEach(function(t) {
+        if (t.dataset.category === cat) {
+          t.classList.add('active');
+          t.setAttribute('aria-selected', 'true');
+          t.tabIndex = 0;
+        }
+      });
+
+      setAccent(c.accent);
+      updatePills();
+
+      // Reset input
+      lastEditedField = 'from';
+      $inputFrom.value = '1';
+      buildAllUnitsDOM();
+      doConversion();
+      updateFavStar();
+      renderFavorites();
+
+      // Fade in
+      requestAnimationFrame(function() {
+        $converter.classList.remove('converter--fading');
+      });
+    }, 200);
+  }
+
+  // === Overlay ===
+  function openOverlay(target) {
+    overlayTarget = target;
+    var c = categories[currentCategory];
+    var currentUnit = (target === 'from') ? fromUnit : toUnit;
+
+    $unitGrid.innerHTML = '';
+    Object.keys(c.units).forEach(function(key) {
+      var btn = document.createElement('button');
+      btn.className = 'unit-overlay__option' + (key === currentUnit ? ' unit-overlay__option--active' : '');
+      btn.textContent = c.units[key].name;
+      btn.dataset.unit = key;
+      btn.addEventListener('click', function() { selectUnit(key); });
+      $unitGrid.appendChild(btn);
+    });
+
+    $overlay.hidden = false;
+
+    // Focus first option
+    requestAnimationFrame(function() {
+      var firstBtn = $unitGrid.querySelector('.unit-overlay__option');
+      if (firstBtn) firstBtn.focus();
+    });
+  }
+
+  // Focus trap for overlay
+  function trapFocus(e) {
+    if ($overlay.hidden) return;
+    if (e.key !== 'Tab') return;
+    var focusable = $overlay.querySelectorAll('button:not([disabled])');
+    if (focusable.length === 0) return;
+    var first = focusable[0];
+    var last = focusable[focusable.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else {
+      if (document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  }
+
+  function closeOverlay() {
+    var returnTarget = overlayTarget;
+    $overlay.hidden = true;
+    overlayTarget = null;
+    if (returnTarget === 'from') $pillFrom.focus();
+    else $pillTo.focus();
+  }
+
+  function selectUnit(key) {
+    if (overlayTarget === 'from') {
+      fromUnit = key;
+    } else {
+      toUnit = key;
+    }
+    var returnFocus = overlayTarget;
+    $overlay.hidden = true;
+    overlayTarget = null;
+    updatePills();
+    doConversion();
+    updateFavStar();
+    if (returnFocus === 'from') $pillFrom.focus();
+    else $pillTo.focus();
+  }
+
+  // === Swap ===
+  function doSwap() {
+    // Animate button
+    $swapBtn.classList.add('swap-btn--rotating');
+
+    // Swap units
+    var tmp = fromUnit;
+    fromUnit = toUnit;
+    toUnit = tmp;
+
+    // Swap values
+    var tmpVal = $inputFrom.value;
+    $inputFrom.value = $inputTo.value;
+    $inputTo.value = tmpVal;
+
+    // Keep lastEditedField the same
+    updatePills();
+    doConversion();
+    updateFavStar();
+
+    // Reset rotation after transition
+    $swapBtn.addEventListener('transitionend', function handler() {
+      $swapBtn.removeEventListener('transitionend', handler);
+      requestAnimationFrame(function() {
+        $swapBtn.style.transition = 'none';
+        $swapBtn.classList.remove('swap-btn--rotating');
+        void $swapBtn.offsetWidth;
+        $swapBtn.style.transition = '';
+      });
+    });
+  }
+
+  // === Input validation on blur ===
+  function cleanInput(el) {
+    var val = parseInput(el.value);
+    if (val !== null) {
+      el.value = formatNumber(val);
+    }
+    // If null (empty/invalid), leave field empty — placeholder "—" shown via results
+  }
+
+  // === Event bindings ===
+  $inputFrom.addEventListener('input', function() {
+    lastEditedField = 'from';
+    doConversion();
+  });
+
+  $inputTo.addEventListener('input', function() {
+    lastEditedField = 'to';
+    doConversion();
+  });
+
+  $inputFrom.addEventListener('blur', function() { cleanInput($inputFrom); });
+  $inputTo.addEventListener('blur', function() { cleanInput($inputTo); });
+
+  $pillFrom.addEventListener('click', function() { openOverlay('from'); });
+  $pillTo.addEventListener('click', function() { openOverlay('to'); });
+
+  $pillFrom.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); openOverlay('from'); }
+  });
+  $pillTo.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); openOverlay('to'); }
+  });
+
+  $overlayBackdrop.addEventListener('click', function() {
+    closeOverlay();
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && !$overlay.hidden) {
+      closeOverlay();
+      return;
+    }
+    if (e.key === 'Escape' && $tooltip && $tooltip.classList.contains('visible')) {
+      dismissTooltip();
+      return;
+    }
+    trapFocus(e);
+  });
+
+  $swapBtn.addEventListener('click', doSwap);
+
+  // === Arrow key navigation for tablist ===
+  $tabs.addEventListener('keydown', function(e) {
+    var tabs = $tabs.querySelectorAll('.tab');
+    var idx = Array.from(tabs).indexOf(document.activeElement);
+    if (idx === -1) return;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      var next = (idx + 1) % tabs.length;
+      tabs[next].focus();
+      switchCategory(tabs[next].dataset.category);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      var prev = (idx - 1 + tabs.length) % tabs.length;
+      tabs[prev].focus();
+      switchCategory(tabs[prev].dataset.category);
+    }
+  });
+
+  // === Copy Result ===
+  var $copyBtn = document.getElementById('copy-result-btn');
+  var $copyToast = document.getElementById('copy-toast');
+  var copyToastTimer = null;
+
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).then(function() { return true; }).catch(function() { return fallbackCopy(text); });
+    }
+    return Promise.resolve(fallbackCopy(text));
+  }
+
+  function fallbackCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch(e) {}
+    document.body.removeChild(ta);
+    return ok;
+  }
+
+  $copyBtn.addEventListener('click', function() {
+    var val = $inputTo.value;
+    if (!val || val === '--' || val === '\u2014') return;
+    var c = categories[currentCategory];
+    var unitName = c.units[toUnit].name;
+    var textToCopy = val + ' ' + unitName;
+    copyText(textToCopy).then(function() {
+      $copyToast.classList.add('visible');
+      clearTimeout(copyToastTimer);
+      copyToastTimer = setTimeout(function() {
+        $copyToast.classList.remove('visible');
+      }, 1200);
+    });
+  });
+
+  // === Favorites ===
+  var $favBtn = document.getElementById('fav-star-btn');
+  var $favorites = document.getElementById('favorites');
+  var $favList = document.getElementById('favorites-list');
+  var FAVS_KEY = 'uniswap_favorites';
+
+  function loadFavorites() {
+    try {
+      var raw = localStorage.getItem(FAVS_KEY);
+      if (!raw) return [];
+      var arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    } catch(e) { return []; }
+  }
+
+  function saveFavorites(favs) {
+    try { localStorage.setItem(FAVS_KEY, JSON.stringify(favs)); } catch(e) {}
+  }
+
+  function isFavorited(cat, from, to) {
+    var favs = loadFavorites();
+    return favs.some(function(f) { return f.category === cat && f.from === from && f.to === to; });
+  }
+
+  function updateFavStar() {
+    if (isFavorited(currentCategory, fromUnit, toUnit)) {
+      $favBtn.classList.add('active');
+      $favBtn.setAttribute('aria-label', 'Удалить из избранного');
+    } else {
+      $favBtn.classList.remove('active');
+      $favBtn.setAttribute('aria-label', 'Добавить в избранное');
+    }
+  }
+
+  function toggleFavorite() {
+    var favs = loadFavorites();
+    var idx = favs.findIndex(function(f) { return f.category === currentCategory && f.from === fromUnit && f.to === toUnit; });
+    if (idx !== -1) {
+      favs.splice(idx, 1);
+    } else {
+      if (favs.length >= 10) favs.shift(); // remove oldest
+      favs.push({ category: currentCategory, from: fromUnit, to: toUnit });
+    }
+    saveFavorites(favs);
+    updateFavStar();
+    renderFavorites();
+  }
+
+  function renderFavorites() {
+    var favs = loadFavorites();
+    if (favs.length === 0) {
+      $favorites.hidden = true;
+      return;
+    }
+    $favorites.hidden = false;
+    $favList.innerHTML = '';
+    favs.forEach(function(fav, i) {
+      var c = categories[fav.category];
+      if (!c) return;
+      var fromU = c.units[fav.from];
+      var toU = c.units[fav.to];
+      if (!fromU || !toU) return;
+
+      var item = document.createElement('div');
+      item.className = 'favorites__item';
+      item.tabIndex = 0;
+
+      var text = document.createElement('span');
+      text.className = 'favorites__item-text';
+      text.textContent = fromU.name + ' \u2192 ' + toU.name;
+
+      var catLabel = document.createElement('span');
+      catLabel.className = 'favorites__item-cat';
+      catLabel.textContent = c.name;
+
+      text.appendChild(catLabel);
+      item.appendChild(text);
+
+      var removeBtn = document.createElement('button');
+      removeBtn.className = 'favorites__remove';
+      removeBtn.setAttribute('aria-label', 'Удалить');
+      removeBtn.textContent = '\u00D7';
+      removeBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var favs2 = loadFavorites();
+        favs2.splice(i, 1);
+        saveFavorites(favs2);
+        updateFavStar();
+        renderFavorites();
+      });
+      item.appendChild(removeBtn);
+
+      function applyFav() {
+        if (fav.category !== currentCategory) {
+          switchCategory(fav.category);
+          setTimeout(function() {
+            fromUnit = fav.from;
+            toUnit = fav.to;
+            updatePills();
+            doConversion();
+            updateFavStar();
+          }, 250);
+        } else {
+          fromUnit = fav.from;
+          toUnit = fav.to;
+          updatePills();
+          doConversion();
+          updateFavStar();
+        }
+      }
+
+      item.addEventListener('click', applyFav);
+      item.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); applyFav(); }
+      });
+
+      $favList.appendChild(item);
+    });
+  }
+
+  $favBtn.addEventListener('click', toggleFavorite);
+
+  // === Onboarding Tooltip ===
+  var $tooltip = document.getElementById('onboarding-tooltip');
+  var ONBOARD_KEY = 'uniswap_onboarded';
+  var tooltipDismissTimer = null;
+
+  function dismissTooltip() {
+    $tooltip.classList.remove('visible');
+    clearTimeout(tooltipDismissTimer);
+    try { localStorage.setItem(ONBOARD_KEY, '1'); } catch(e) {}
+  }
+
+  function initOnboarding() {
+    var seen = false;
+    try { seen = localStorage.getItem(ONBOARD_KEY) === '1'; } catch(e) {}
+    if (seen) return;
+
+    setTimeout(function() {
+      $tooltip.classList.add('visible');
+      tooltipDismissTimer = setTimeout(dismissTooltip, 5000);
+    }, 1000);
+  }
+
+  // Dismiss on first tab click (patched into switchCategory)
+  var originalSwitchCategory = switchCategory;
+  switchCategory = function(cat) {
+    dismissTooltip();
+    originalSwitchCategory(cat);
+  };
+
+  // === Init ===
+  buildTabs();
+  setAccent(categories[currentCategory].accent);
+  updatePills();
+  lastEditedField = 'from';
+  buildAllUnitsDOM();
+  doConversion();
+  updateFavStar();
+  renderFavorites();
+  initOnboarding();
+
+  // Autofocus
+  requestAnimationFrame(function() { $inputFrom.focus(); });
+
+})();
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(function(){});}
+</script>
+</body>
+</html>
