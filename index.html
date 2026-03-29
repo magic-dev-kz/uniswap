@@ -303,6 +303,34 @@ body {
   transition: transform var(--duration-slow) var(--ease-spring);
 }
 
+/* Reverse label container */
+.swap-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: var(--spacing-lg) auto;
+  width: fit-content;
+}
+.swap-container .swap-btn {
+  margin: 0;
+}
+.reverse-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--accent);
+  opacity: 0.6;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition: opacity var(--duration-fast) var(--ease-out);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.swap-container:hover .reverse-label {
+  opacity: 1;
+}
+
 /* === All Units === */
 .all-units {
   width: 100%;
@@ -1368,12 +1396,15 @@ input:focus-visible { outline: none; }
       </button>
       <div class="quick-presets" id="quick-presets"></div>
     </div>
-    <button class="swap-btn" id="swap-btn" aria-label="Поменять единицы местами">
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M7 4v16M7 4l-3 3M7 4l3 3"/>
-        <path d="M17 20V4M17 20l-3-3M17 20l3-3"/>
-      </svg>
-    </button>
+    <div class="swap-container">
+      <span class="reverse-label" id="reverse-label" aria-hidden="true">&#8617; Reverse</span>
+      <button class="swap-btn" id="swap-btn" aria-label="Поменять единицы местами">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 4v16M7 4l-3 3M7 4l3 3"/>
+          <path d="M17 20V4M17 20l-3-3M17 20l3-3"/>
+        </svg>
+      </button>
+    </div>
     <div class="converter__result-section">
       <div class="converter__result-row">
         <input type="text" inputmode="decimal" class="converter__result-input" id="input-to" autocomplete="off" aria-label="Результат" aria-live="polite">
@@ -2403,6 +2434,10 @@ input:focus-visible { outline: none; }
   });
 
   $swapBtn.addEventListener('click', function() { doSwap(); });
+  var $reverseLabel = document.getElementById('reverse-label');
+  if ($reverseLabel) {
+    $reverseLabel.addEventListener('click', function() { doSwap(); });
+  }
 
   // === Arrow key navigation for tablist ===
   $tabs.addEventListener('keydown', function(e) {

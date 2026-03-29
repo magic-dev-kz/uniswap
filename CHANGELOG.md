@@ -1,5 +1,21 @@
 # UniSwap — Changelog
 
+## v14.0 (2026-03-29) — "Quick Reverse"
+
+Feature update by Mario.
+
+### Reverse Last Conversion
+- New "Reverse" label displayed next to the swap button for improved discoverability
+- Label fades in on hover over the swap area, always visible as subtle hint
+- Clicking the label triggers the same swap animation as the swap button
+- Unicode arrow icon (&#8617;) provides visual affordance
+- Swap button retains full existing rotation animation and cross-fade behavior
+
+### Service Worker
+- Cache version bumped to `uniswap-v14`
+
+---
+
 ## v13.0 (2026-03-29) — "Show Your Work"
 
 Feature update by Mario.
