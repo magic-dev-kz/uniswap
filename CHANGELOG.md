@@ -1,5 +1,25 @@
 # UniSwap — Changelog
 
+## v15.0 (2026-03-29) — "Voice Input"
+
+Feature update by Mario.
+
+### Voice Input (Web Speech API)
+- New microphone button next to the input field for spoken number entry
+- Uses Web Speech API (`SpeechRecognition`) — button only visible in supported browsers
+- Spoken numbers parsed to digits: "one hundred" becomes 100, "fifty two" becomes 52
+- Supports both English and Russian number words (language detected from page `lang` attribute)
+- Handles word-form numbers: ones, tens, hundreds, thousands, millions
+- Direct numeric speech also supported (e.g. saying "42" works)
+- Mic button pulses red while listening with `voicePulse` animation
+- Toast notification confirms recognized value or shows parse error
+- Button styled with glassmorphism, hover glow, and accent color on hover
+
+### Service Worker
+- Cache version bumped to `uniswap-v15`
+
+---
+
 ## v14.0 (2026-03-29) — "Quick Reverse"
 
 Feature update by Mario.

@@ -159,6 +159,16 @@ body {
   width: 100%;
 }
 
+/* Voice input */
+.converter__input-row{display:flex;align-items:center;gap:8px;width:100%}
+.converter__input-row .converter__input{flex:1;min-width:0}
+.voice-btn{display:none;width:var(--tap-target);height:var(--tap-target);border-radius:50%;border:1.5px solid var(--glass-border);background:var(--bg-elevated);backdrop-filter:blur(var(--glass-blur));color:var(--text-secondary);cursor:pointer;flex-shrink:0;transition:all var(--duration-med) var(--ease-out);padding:0;align-items:center;justify-content:center}
+.voice-btn.supported{display:inline-flex}
+.voice-btn:hover{border-color:var(--accent);color:var(--accent);box-shadow:0 0 12px color-mix(in srgb,var(--accent),transparent 70%);transform:scale(1.08)}
+.voice-btn:active{transform:scale(0.95)}
+.voice-btn.listening{border-color:var(--red);color:var(--red);animation:voicePulse 1.2s ease-in-out infinite}
+@keyframes voicePulse{0%,100%{box-shadow:0 0 0 0 rgba(255,69,58,0.3)}50%{box-shadow:0 0 0 10px rgba(255,69,58,0)}}
+
 .converter__input,
 .converter__result-input {
   width: 100%;
@@ -1388,7 +1398,12 @@ input:focus-visible { outline: none; }
   </div>
   <div class="converter" role="tabpanel" id="converter">
     <div class="converter__input-section">
-      <input type="text" inputmode="decimal" class="converter__input" id="input-from" value="1" placeholder="e.g. 100" autocomplete="off" autofocus aria-label="Исходное значение">
+      <div class="converter__input-row">
+        <input type="text" inputmode="decimal" class="converter__input" id="input-from" value="1" placeholder="e.g. 100" autocomplete="off" autofocus aria-label="Исходное значение">
+        <button class="voice-btn" id="voice-btn" aria-label="Voice input" title="Voice input">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="1" width="6" height="11" rx="3"/><path d="M19 10v1a7 7 0 01-14 0v-1"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </button>
+      </div>
       <div class="converter__expr-hint" id="expr-hint-from"></div>
       <button class="unit-pill" id="pill-from" aria-haspopup="listbox">
         <span class="unit-pill__label" id="pill-from-label"></span>
@@ -3171,6 +3186,94 @@ input:focus-visible { outline: none; }
       if (currentCategory === 'currency') fetchCurrencyRates();
     }
   });
+
+  // === Voice Input (Web Speech API) ===
+  (function(){
+    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    var $voiceBtn = document.getElementById('voice-btn');
+    if (!SpeechRecognition || !$voiceBtn) return;
+    $voiceBtn.classList.add('supported');
+    var recognition = null;
+    var listening = false;
+
+    // Parse spoken number words to digits
+    function parseSpokenNumber(text) {
+      var s = text.trim().toLowerCase();
+      // Try direct number first
+      var direct = parseFloat(s.replace(/,/g, ''));
+      if (!isNaN(direct)) return direct;
+      // Word-to-number mapping
+      var ones = {zero:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,
+        ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,
+        seventeen:17,eighteen:18,nineteen:19};
+      var tens = {twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90};
+      var scales = {hundred:100,thousand:1000,million:1000000,billion:1000000000};
+      // Also handle Russian number words
+      var ruOnes = {ноль:0,один:1,одна:1,два:2,две:2,три:3,четыре:4,пять:5,шесть:6,семь:7,восемь:8,девять:9,
+        десять:10,одиннадцать:11,двенадцать:12,тринадцать:13,четырнадцать:14,пятнадцать:15,
+        шестнадцать:16,семнадцать:17,восемнадцать:18,девятнадцать:19};
+      var ruTens = {двадцать:20,тридцать:30,сорок:40,пятьдесят:50,шестьдесят:60,семьдесят:70,восемьдесят:80,девяносто:90};
+      var ruScales = {сто:100,двести:200,триста:300,четыреста:400,пятьсот:500,шестьсот:600,семьсот:700,восемьсот:800,девятьсот:900,
+        тысяча:1000,тысячи:1000,тысяч:1000,миллион:1000000,миллиона:1000000,миллионов:1000000};
+      // Merge RU into EN maps
+      Object.keys(ruOnes).forEach(function(k){ones[k]=ruOnes[k];});
+      Object.keys(ruTens).forEach(function(k){tens[k]=ruTens[k];});
+      Object.keys(ruScales).forEach(function(k){scales[k]=ruScales[k];});
+
+      var words = s.replace(/[^a-zа-яё0-9\s.-]/gi, '').split(/\s+/);
+      var result = 0, current = 0;
+      for (var i = 0; i < words.length; i++) {
+        var w = words[i];
+        var num = parseFloat(w);
+        if (!isNaN(num)) { current += num; continue; }
+        if (ones.hasOwnProperty(w)) { current += ones[w]; }
+        else if (tens.hasOwnProperty(w)) { current += tens[w]; }
+        else if (w === 'hundred' || w === 'сто') { current = (current === 0 ? 1 : current) * 100; }
+        else if (scales.hasOwnProperty(w)) {
+          var sv = scales[w];
+          if (sv >= 1000) { current = (current === 0 ? 1 : current) * sv; result += current; current = 0; }
+          else { current = (current === 0 ? 1 : current) * sv; }
+        }
+      }
+      result += current;
+      return result === 0 && s.length > 0 ? null : result;
+    }
+
+    $voiceBtn.addEventListener('click', function() {
+      if (listening) {
+        recognition.stop();
+        return;
+      }
+      recognition = new SpeechRecognition();
+      recognition.lang = document.documentElement.lang === 'ru' ? 'ru-RU' : 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      listening = true;
+      $voiceBtn.classList.add('listening');
+
+      recognition.addEventListener('result', function(ev) {
+        var transcript = ev.results[0][0].transcript;
+        var num = parseSpokenNumber(transcript);
+        if (num !== null) {
+          $inputFrom.value = num;
+          $inputFrom.dispatchEvent(new Event('input'));
+          showGlobalToast('Voice: ' + num);
+        } else {
+          showGlobalToast('Could not parse: "' + transcript + '"');
+        }
+      });
+      recognition.addEventListener('end', function() {
+        listening = false;
+        $voiceBtn.classList.remove('listening');
+      });
+      recognition.addEventListener('error', function(ev) {
+        listening = false;
+        $voiceBtn.classList.remove('listening');
+        if (ev.error !== 'aborted') showGlobalToast('Voice error: ' + ev.error);
+      });
+      recognition.start();
+    });
+  })();
 
   // Autofocus
   requestAnimationFrame(function() { $inputFrom.focus(); });
