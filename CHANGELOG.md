@@ -1,5 +1,32 @@
 # UniSwap — Changelog
 
+## v12.0 (2026-03-29) — "Power User"
+
+Feature update by Mario.
+
+### Conversion Cheat Sheet
+- Collapsible "Common Conversions" section with 10 popular conversions (1 mile = 1.609 km, 1 lb = 0.454 kg, etc.)
+- Click any entry to copy to clipboard with global toast confirmation
+- Toggle via styled button with animated arrow
+
+### Multi-step Conversion
+- "Convert through" section: select an intermediate unit to see two-step conversion results
+- Example: feet -> meters -> centimeters — shows both intermediate and final results
+- Dropdown populated dynamically based on current category units (excludes from/to units)
+- Hidden for currency category; requires 3+ units in category
+- Updates live as input value changes
+
+### Offline Currency Disclaimer
+- When currency rates are loaded from cache (not fresh from API): orange warning banner
+- Shows "Offline mode — using cached rates from [date]"
+- Automatically hidden when fresh rates are fetched
+- Styled with orange accent to match the stale-rates visual language
+
+### Service Worker
+- Cache version bumped to `uniswap-v12`
+
+---
+
 ## v11.0 (2026-03-29) — "First Impression"
 
 Feature update by Mario.

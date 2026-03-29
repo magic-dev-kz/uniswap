@@ -1135,6 +1135,189 @@ input:focus-visible { outline: none; }
 
 .converter__formula[hidden] { display: none; }
 
+/* === Common Conversions Cheat Sheet (v12) === */
+.cheat-sheet {
+  width: 100%;
+  margin-top: var(--spacing-lg);
+}
+
+.cheat-sheet__toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px var(--spacing-md);
+  background: var(--bg-elevated);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cheat-sheet__toggle:hover,
+.cheat-sheet__toggle:focus-visible {
+  border-color: var(--accent);
+  color: var(--text-primary);
+  background: var(--accent-bg);
+}
+
+.cheat-sheet__arrow {
+  font-size: 10px;
+  transition: transform var(--duration-med) var(--ease-out);
+}
+
+.cheat-sheet__toggle.open .cheat-sheet__arrow {
+  transform: rotate(180deg);
+}
+
+.cheat-sheet__body {
+  display: none;
+  padding-top: var(--spacing-sm);
+}
+
+.cheat-sheet__body.open {
+  display: block;
+  animation: fade-in var(--duration-fast) var(--ease-out);
+}
+
+.cheat-sheet__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px var(--spacing-md);
+  border-radius: 10px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-primary);
+  transition: background var(--duration-fast) var(--ease-out);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cheat-sheet__item:hover {
+  background: var(--bg-tertiary);
+}
+
+.cheat-sheet__item-left {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.cheat-sheet__item-right {
+  font-weight: 500;
+}
+
+/* === Multi-step Conversion (v12) === */
+.multistep {
+  width: 100%;
+  margin-top: var(--spacing-lg);
+}
+
+.multistep[hidden] { display: none; }
+
+.multistep__header {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.multistep__row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) 0;
+}
+
+.multistep__select {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--bg-elevated);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%238E8E93' d='M5 7L1 3h8z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+
+.multistep__select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.multistep__arrow-icon {
+  color: var(--text-secondary);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.multistep__results {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: var(--spacing-sm);
+}
+
+.multistep__result-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px var(--spacing-md);
+  background: var(--bg-elevated);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.multistep__result-label {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.multistep__result-value {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* === Offline Currency Disclaimer (v12) === */
+.currency-offline-disclaimer {
+  width: 100%;
+  text-align: center;
+  margin-top: var(--spacing-sm);
+  padding: 8px 14px;
+  background: rgba(255, 159, 10, 0.08);
+  border: 1px solid rgba(255, 159, 10, 0.2);
+  border-radius: 10px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--orange);
+  animation: fade-in var(--duration-med) var(--ease-out);
+}
+
+.currency-offline-disclaimer[hidden] { display: none; }
+
 .oc-footer{text-align:center;padding:20px 16px 24px;margin-top:24px}
 .oc-footer a{font-size:.78rem;color:var(--text-muted,var(--text-secondary,#888));text-decoration:none;opacity:.6;transition:opacity .2s}
 .oc-footer a:hover{opacity:1}
@@ -1195,6 +1378,7 @@ input:focus-visible { outline: none; }
           <span id="currency-info-text"></span>
         </span>
       </div>
+      <div class="currency-offline-disclaimer" id="currency-offline-disclaimer" hidden></div>
       <button class="unit-pill" id="pill-to" aria-haspopup="listbox">
         <span class="unit-pill__label" id="pill-to-label"></span>
         <span class="unit-pill__arrow">&#9662;</span>
@@ -1212,6 +1396,24 @@ input:focus-visible { outline: none; }
         <button class="history__clear-btn" id="history-clear-btn">Очистить</button>
       </div>
       <div class="history__list" id="history-list"></div>
+    </div>
+    <div class="multistep" id="multistep" hidden>
+      <div class="multistep__header">Convert through</div>
+      <div class="multistep__row">
+        <span id="multistep-from-label" class="multistep__arrow-icon"></span>
+        <span class="multistep__arrow-icon">&#8594;</span>
+        <select class="multistep__select" id="multistep-via" aria-label="Intermediate unit"></select>
+        <span class="multistep__arrow-icon">&#8594;</span>
+        <span id="multistep-to-label" class="multistep__arrow-icon"></span>
+      </div>
+      <div class="multistep__results" id="multistep-results"></div>
+    </div>
+    <div class="cheat-sheet" id="cheat-sheet">
+      <button class="cheat-sheet__toggle" id="cheat-sheet-toggle" aria-expanded="false" aria-controls="cheat-sheet-body">
+        <span>&#128218; Common Conversions</span>
+        <span class="cheat-sheet__arrow">&#9662;</span>
+      </button>
+      <div class="cheat-sheet__body" id="cheat-sheet-body"></div>
     </div>
     <div class="all-units" id="all-units">
       <div class="all-units__header">Все единицы</div>
@@ -1946,6 +2148,8 @@ input:focus-visible { outline: none; }
       renderFavorites();
       renderQuickPresets();
       updateCurrencyInfo();
+      buildMultistepSelect();
+      updateOfflineDisclaimer();
       if (cat === 'currency') fetchCurrencyRates();
 
       // Fade in
@@ -2699,6 +2903,135 @@ input:focus-visible { outline: none; }
     }
   });
 
+  // === Cheat Sheet (v12) ===
+  var commonConversions = [
+    { left: '1 mile', right: '1.609 km' },
+    { left: '1 lb', right: '0.454 kg' },
+    { left: '1 inch', right: '2.54 cm' },
+    { left: '1 foot', right: '30.48 cm' },
+    { left: '1 gallon', right: '3.785 L' },
+    { left: '1 oz', right: '28.35 g' },
+    { left: '0\u00B0C', right: '32\u00B0F' },
+    { left: '1 km', right: '0.621 miles' },
+    { left: '1 kg', right: '2.205 lb' },
+    { left: '1 acre', right: '4 047 m\u00B2' },
+  ];
+
+  var $cheatToggle = document.getElementById('cheat-sheet-toggle');
+  var $cheatBody = document.getElementById('cheat-sheet-body');
+
+  function renderCheatSheet() {
+    $cheatBody.innerHTML = '';
+    commonConversions.forEach(function(c) {
+      var item = document.createElement('div');
+      item.className = 'cheat-sheet__item';
+      item.innerHTML = '<span class="cheat-sheet__item-left">' + c.left + '</span><span class="cheat-sheet__item-right">' + c.right + '</span>';
+      item.addEventListener('click', function() {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(c.left + ' = ' + c.right).catch(function(){});
+        }
+        showGlobalToast('Copied: ' + c.left + ' = ' + c.right);
+      });
+      $cheatBody.appendChild(item);
+    });
+  }
+
+  $cheatToggle.addEventListener('click', function() {
+    var isOpen = $cheatBody.classList.toggle('open');
+    $cheatToggle.classList.toggle('open', isOpen);
+    $cheatToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    if (isOpen && $cheatBody.children.length === 0) renderCheatSheet();
+  });
+
+  // === Multi-step Conversion (v12) ===
+  var $multistep = document.getElementById('multistep');
+  var $multistepVia = document.getElementById('multistep-via');
+  var $multistepResults = document.getElementById('multistep-results');
+  var $multistepFromLabel = document.getElementById('multistep-from-label');
+  var $multistepToLabel = document.getElementById('multistep-to-label');
+
+  function buildMultistepSelect() {
+    var c = categories[currentCategory];
+    if (!c || currentCategory === 'currency') {
+      $multistep.hidden = true;
+      return;
+    }
+    $multistep.hidden = false;
+    var unitKeys = Object.keys(c.units);
+    // Only show if there are 3+ units (need an intermediate)
+    if (unitKeys.length < 3) { $multistep.hidden = true; return; }
+
+    $multistepFromLabel.textContent = c.units[fromUnit].name;
+    $multistepToLabel.textContent = c.units[toUnit].name;
+
+    $multistepVia.innerHTML = '<option value="">-- select --</option>';
+    unitKeys.forEach(function(key) {
+      if (key === fromUnit || key === toUnit) return;
+      var opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = c.units[key].full || c.units[key].name;
+      $multistepVia.appendChild(opt);
+    });
+    $multistepResults.innerHTML = '';
+  }
+
+  function doMultistepConversion() {
+    var viaUnit = $multistepVia.value;
+    if (!viaUnit) { $multistepResults.innerHTML = ''; return; }
+    var val = parseInput($inputFrom.value);
+    if (val === null) { $multistepResults.innerHTML = ''; return; }
+    var c = categories[currentCategory];
+
+    // Step 1: from -> via
+    var step1 = convert(val, fromUnit, viaUnit, currentCategory);
+    // Step 2: via -> to
+    var step2 = (step1 !== null) ? convert(step1, viaUnit, toUnit, currentCategory) : null;
+
+    var fromName = c.units[fromUnit].name;
+    var viaName = c.units[viaUnit].name;
+    var toName = c.units[toUnit].name;
+
+    var html = '';
+    html += '<div class="multistep__result-item"><span class="multistep__result-label">' + fromName + ' \u2192 ' + viaName + '</span><span class="multistep__result-value">' + formatNumber(step1) + ' ' + viaName + '</span></div>';
+    html += '<div class="multistep__result-item"><span class="multistep__result-label">' + viaName + ' \u2192 ' + toName + '</span><span class="multistep__result-value">' + formatNumber(step2) + ' ' + toName + '</span></div>';
+    $multistepResults.innerHTML = html;
+  }
+
+  $multistepVia.addEventListener('change', doMultistepConversion);
+
+  // Hook into doConversion to update multistep when values change
+  var _origDoConversionV12 = doConversion;
+  doConversion = function() {
+    _origDoConversionV12();
+    if ($multistepVia.value) doMultistepConversion();
+    updateOfflineDisclaimer();
+  };
+
+  // === Offline Currency Disclaimer (v12) ===
+  var $offlineDisclaimer = document.getElementById('currency-offline-disclaimer');
+
+  function updateOfflineDisclaimer() {
+    if (currentCategory !== 'currency') {
+      $offlineDisclaimer.hidden = true;
+      return;
+    }
+    var cached = loadCachedRates();
+    if (!cached || !cached.timestamp) {
+      $offlineDisclaimer.hidden = true;
+      return;
+    }
+    // Check if rates are from cache (not fresh)
+    var isFresh = isCacheValid(cached);
+    if (isFresh) {
+      $offlineDisclaimer.hidden = true;
+      return;
+    }
+    // Show offline disclaimer with cached date
+    var dateStr = cached.date || new Date(cached.timestamp).toLocaleDateString();
+    $offlineDisclaimer.hidden = false;
+    $offlineDisclaimer.textContent = '\u26A0 Offline mode \u2014 using cached rates from ' + dateStr;
+  }
+
   // === Init ===
   // Pre-load currency rates from cache so currency tab works immediately
   var cachedRates = loadCachedRates();
@@ -2721,6 +3054,9 @@ input:focus-visible { outline: none; }
   renderHistory();
   initOnboarding();
   updateCurrencyInfo();
+  buildMultistepSelect();
+  renderCheatSheet();
+  updateOfflineDisclaimer();
 
   // Prefetch currency rates in background
   fetchCurrencyRates();
@@ -2739,6 +3075,8 @@ input:focus-visible { outline: none; }
       renderFavorites();
       renderQuickPresets();
       updateCurrencyInfo();
+      buildMultistepSelect();
+      updateOfflineDisclaimer();
       if (currentCategory === 'currency') fetchCurrencyRates();
     }
   });
