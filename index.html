@@ -563,6 +563,73 @@ input:focus-visible { outline: none; }
   line-height: 1.4;
 }
 
+/* === Onboarding Overlay === */
+.onboarding-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  opacity: 0; transition: opacity 0.4s ease;
+  padding: 24px;
+}
+.onboarding-overlay.visible { opacity: 1; }
+.onboarding-overlay.hidden { display: none; }
+
+.onboarding-card {
+  width: 100%; max-width: 380px;
+  background: rgba(30,30,34,0.85);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 24px;
+  padding: 40px 32px 32px;
+  text-align: center;
+  box-shadow: 0 0 60px rgba(10,132,255,0.15), 0 24px 48px rgba(0,0,0,0.5);
+  transform: translateY(20px) scale(0.96);
+  transition: transform 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+.onboarding-overlay.visible .onboarding-card {
+  transform: translateY(0) scale(1);
+}
+
+.onboarding-card__emoji { font-size: 3rem; margin-bottom: 8px; }
+.onboarding-card__title {
+  font-family: var(--font-sans); font-size: 1.75rem; font-weight: 700;
+  color: var(--text-primary); letter-spacing: -0.02em; margin-bottom: 4px;
+}
+.onboarding-card__tagline {
+  font-size: 1rem; color: var(--text-secondary); margin-bottom: 28px; font-weight: 400;
+}
+
+.onboarding-card__features {
+  list-style: none; text-align: left; margin-bottom: 28px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.onboarding-card__features li {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 0.88rem; color: var(--text-secondary); line-height: 1.45;
+}
+.onboarding-card__features li::before {
+  content: ''; flex-shrink: 0; width: 6px; height: 6px;
+  border-radius: 50%; margin-top: 6px;
+  background: var(--accent, var(--blue));
+  box-shadow: 0 0 8px var(--accent, var(--blue));
+}
+
+.onboarding-card__cta {
+  display: inline-block; width: 100%; padding: 14px 0;
+  border: none; border-radius: 14px; cursor: pointer;
+  font-family: var(--font-sans); font-size: 1.05rem; font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, var(--blue), #64D2FF);
+  box-shadow: 0 0 30px rgba(10,132,255,0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.onboarding-card__cta:hover {
+  transform: translateY(-2px); box-shadow: 0 0 40px rgba(10,132,255,0.5);
+}
+.onboarding-card__cta:active { transform: translateY(0) scale(0.98); }
+
 /* === Copy Result Button === */
 .converter__result-row {
   display: flex;
@@ -1074,6 +1141,21 @@ input:focus-visible { outline: none; }
 </style>
 </head>
 <body>
+
+<div class="onboarding-overlay hidden" id="onboardingOverlay">
+  <div class="onboarding-card">
+    <div class="onboarding-card__emoji">&#x1F504;</div>
+    <div class="onboarding-card__title">UniSwap</div>
+    <p class="onboarding-card__tagline">Convert anything. Instantly.</p>
+    <ul class="onboarding-card__features">
+      <li>Length, weight, temperature, volume, area + live currency</li>
+      <li>Math expressions: type 2+3 to convert 5</li>
+      <li>Works offline, no tracking</li>
+    </ul>
+    <button class="onboarding-card__cta" id="onboardingCta">Start Converting &#8594;</button>
+  </div>
+</div>
+
 <div class="app">
   <div class="tabs" role="tablist" id="tabs"></div>
   <div class="category-desc" id="category-desc" style="text-align:center;font-size:0.72rem;color:var(--text-secondary);padding:4px 16px 0;opacity:0.7;min-height:1.2em"></div>
@@ -2428,6 +2510,29 @@ input:focus-visible { outline: none; }
   var ONBOARD_KEY = 'uniswap_onboarded';
   var tooltipDismissTimer = null;
 
+  // === Onboarding Overlay (v11) ===
+  var $onboardOverlay = document.getElementById('onboardingOverlay');
+  var $onboardCta = document.getElementById('onboardingCta');
+
+  function dismissOverlay() {
+    if (!$onboardOverlay) return;
+    $onboardOverlay.classList.remove('visible');
+    setTimeout(function() { $onboardOverlay.classList.add('hidden'); }, 400);
+    try { localStorage.setItem(ONBOARD_KEY, '1'); } catch(e) {}
+  }
+
+  if ($onboardCta) {
+    $onboardCta.addEventListener('click', dismissOverlay);
+  }
+  if ($onboardOverlay) {
+    $onboardOverlay.addEventListener('click', function(e) {
+      if (e.target === $onboardOverlay) dismissOverlay();
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && $onboardOverlay.classList.contains('visible')) dismissOverlay();
+    });
+  }
+
   function dismissTooltip() {
     $tooltip.classList.remove('visible');
     clearTimeout(tooltipDismissTimer);
@@ -2439,6 +2544,18 @@ input:focus-visible { outline: none; }
     try { seen = localStorage.getItem(ONBOARD_KEY) === '1'; } catch(e) {}
     if (seen) return;
 
+    // Show full overlay on first visit
+    if ($onboardOverlay) {
+      $onboardOverlay.classList.remove('hidden');
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          $onboardOverlay.classList.add('visible');
+        });
+      });
+      return;
+    }
+
+    // Fallback: old tooltip
     setTimeout(function() {
       $tooltip.classList.add('visible');
       tooltipDismissTimer = setTimeout(dismissTooltip, 5000);
@@ -2449,6 +2566,7 @@ input:focus-visible { outline: none; }
   var originalSwitchCategory = switchCategory;
   switchCategory = function(cat) {
     dismissTooltip();
+    dismissOverlay();
     originalSwitchCategory(cat);
   };
 

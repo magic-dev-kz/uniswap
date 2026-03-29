@@ -1,5 +1,23 @@
 # UniSwap — Changelog
 
+## v11.0 (2026-03-29) — "First Impression"
+
+Feature update by Mario.
+
+### Onboarding Overlay
+- Full-screen glassmorphism overlay on first visit (localStorage-gated)
+- Title with emoji, tagline "Convert anything. Instantly."
+- Three feature bullets: categories + currency, math expressions, offline/no-tracking
+- CTA button "Start Converting" dismisses overlay
+- Dismiss via CTA click, backdrop click, or Escape key
+- Blue-cyan gradient accent matching app theme
+- Spring animation on card entrance
+
+### Service Worker
+- Cache version bumped to `uniswap-v11`
+
+---
+
 ## v10.0 (2026-03-29) — "Micro-polish"
 
 Feature update by Mario.
