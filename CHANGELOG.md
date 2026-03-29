@@ -1,5 +1,35 @@
 # UniSwap — Changelog
 
+## v7.0 (2026-03-29) — "Deep Links & Memory"
+
+Feature update by Mario.
+
+### URL Hash State
+- Current conversion is saved to the URL hash: `#100-km-mi`.
+- On page load, the hash is parsed and the conversion is restored.
+- Hash updates on every conversion change via `history.replaceState`.
+- Browser back/forward triggers `hashchange` listener to restore state.
+- Shareable links: copy the URL to share a specific conversion.
+
+### Keyboard Shortcuts
+- Keys `1`-`5` switch categories (Length, Weight, Temp, Volume, Currency) when not typing in an input field.
+- `Enter` while focused on an input triggers conversion, records to history, and blurs the field.
+- Shortcuts disabled when the unit overlay is open.
+
+### Auto-Save Last Conversion
+- Every conversion is saved to `localStorage` under `uniswap_last_conversion`.
+- On page load (when no URL hash is present), the last conversion is restored: category, units, and input value.
+- URL hash takes priority over saved state.
+
+### Technical
+- SW cache bumped to `uniswap-v7`.
+
+### Preserved
+- All existing features intact.
+- HTML structure and accessibility attributes unchanged.
+
+---
+
 ## v6.0 (2026-03-29) — "Polish & Motion"
 
 Quality polish by Mario.

@@ -2250,15 +2250,148 @@ input:focus-visible { outline: none; }
     originalSwitchCategory(cat);
   };
 
+  // === URL Hash State ===
+  var LAST_CONV_KEY = 'uniswap_last_conversion';
+
+  function buildHash() {
+    var val = parseInput($inputFrom.value);
+    var numStr = (val !== null) ? $inputFrom.value.replace(/\s/g, '') : '1';
+    return '#' + numStr + '-' + fromUnit + '-' + toUnit;
+  }
+
+  function updateHash() {
+    try {
+      var hash = buildHash();
+      if (window.location.hash !== hash) {
+        history.replaceState(null, '', hash);
+      }
+    } catch(e) {}
+  }
+
+  function parseHash() {
+    var hash = window.location.hash;
+    if (!hash || hash.length < 2) return null;
+    hash = hash.substring(1); // remove #
+    // Format: value-fromUnit-toUnit  e.g. 100-km-mi
+    var parts = hash.split('-');
+    if (parts.length < 3) return null;
+    // Value might be negative, so rejoin if first part is empty (leading -)
+    var valueParts = [];
+    var unitParts = [];
+    // Find units from the end (last 2 segments)
+    var toU = parts[parts.length - 1];
+    var fromU = parts[parts.length - 2];
+    var valStr = parts.slice(0, parts.length - 2).join('-');
+    if (!valStr) return null;
+    return { value: valStr, from: fromU, to: toU };
+  }
+
+  function findCategoryForUnits(fromU, toU) {
+    var catKeys = Object.keys(categories);
+    for (var i = 0; i < catKeys.length; i++) {
+      var cat = categories[catKeys[i]];
+      if (cat.units[fromU] && cat.units[toU]) return catKeys[i];
+    }
+    return null;
+  }
+
+  function restoreFromHash() {
+    var parsed = parseHash();
+    if (!parsed) return false;
+    var cat = findCategoryForUnits(parsed.from, parsed.to);
+    if (!cat) return false;
+    var val = parseInput(parsed.value);
+    if (val === null) return false;
+
+    currentCategory = cat;
+    fromUnit = parsed.from;
+    toUnit = parsed.to;
+    $inputFrom.value = parsed.value;
+    lastEditedField = 'from';
+    return true;
+  }
+
+  // Update hash on conversion changes
+  var _origDoConversion = doConversion;
+  doConversion = function() {
+    _origDoConversion();
+    updateHash();
+    saveLastConversion();
+  };
+
+  // === Auto-save Last Conversion ===
+  function saveLastConversion() {
+    try {
+      localStorage.setItem(LAST_CONV_KEY, JSON.stringify({
+        category: currentCategory,
+        from: fromUnit,
+        to: toUnit,
+        value: $inputFrom.value,
+        timestamp: Date.now()
+      }));
+    } catch(e) {}
+  }
+
+  function restoreLastConversion() {
+    try {
+      var raw = localStorage.getItem(LAST_CONV_KEY);
+      if (!raw) return false;
+      var data = JSON.parse(raw);
+      if (!data || !data.category || !data.from || !data.to) return false;
+      var cat = categories[data.category];
+      if (!cat || !cat.units[data.from] || !cat.units[data.to]) return false;
+      currentCategory = data.category;
+      fromUnit = data.from;
+      toUnit = data.to;
+      if (data.value) $inputFrom.value = data.value;
+      lastEditedField = 'from';
+      return true;
+    } catch(e) { return false; }
+  }
+
+  // === Keyboard Shortcuts ===
+  var categoryKeys = Object.keys(categories);
+
+  document.addEventListener('keydown', function(e) {
+    // Don't handle shortcuts when overlay is open or input is focused
+    if (!$overlay.hidden) return;
+    var isInputFocused = document.activeElement === $inputFrom || document.activeElement === $inputTo;
+
+    // 1-5 switch categories (only when not typing in input)
+    if (!isInputFocused && e.key >= '1' && e.key <= '5') {
+      var idx = parseInt(e.key, 10) - 1;
+      if (idx < categoryKeys.length) {
+        e.preventDefault();
+        switchCategory(categoryKeys[idx]);
+      }
+      return;
+    }
+
+    // Enter = convert (re-trigger conversion, useful after editing)
+    if (e.key === 'Enter' && isInputFocused) {
+      e.preventDefault();
+      skipCountUp = false;
+      doConversion();
+      addToHistory();
+      document.activeElement.blur();
+      return;
+    }
+  });
+
   // === Init ===
   // Pre-load currency rates from cache so currency tab works immediately
   var cachedRates = loadCachedRates();
   if (cachedRates) applyCurrencyRates(cachedRates);
 
+  // Restore state: URL hash takes priority, then last conversion
+  var restoredFromHash = restoreFromHash();
+  if (!restoredFromHash) {
+    restoreLastConversion();
+  }
+
   buildTabs();
   setAccent(categories[currentCategory].accent);
   updatePills();
-  lastEditedField = 'from';
   buildAllUnitsDOM();
   doConversion();
   updateFavStar();
@@ -2269,6 +2402,23 @@ input:focus-visible { outline: none; }
 
   // Prefetch currency rates in background
   fetchCurrencyRates();
+
+  // Listen for hash changes (browser back/forward)
+  window.addEventListener('hashchange', function() {
+    if (restoreFromHash()) {
+      buildTabs();
+      setAccent(categories[currentCategory].accent);
+      updatePills();
+      buildAllUnitsDOM();
+      skipCountUp = true;
+      doConversion();
+      skipCountUp = false;
+      updateFavStar();
+      renderFavorites();
+      updateCurrencyInfo();
+      if (currentCategory === 'currency') fetchCurrencyRates();
+    }
+  });
 
   // Autofocus
   requestAnimationFrame(function() { $inputFrom.focus(); });
