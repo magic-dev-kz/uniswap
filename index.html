@@ -34,11 +34,13 @@
   --accent-weight:   #FF9F0A;
   --accent-temp:     #FF453A;
   --accent-volume:   #64D2FF;
+  --accent-currency: #30D158;
 
   --accent-length-bg:  rgba(10, 132, 255, 0.12);
   --accent-weight-bg:  rgba(255, 159, 10, 0.12);
   --accent-temp-bg:    rgba(255, 69, 58, 0.12);
   --accent-volume-bg:  rgba(100, 210, 255, 0.12);
+  --accent-currency-bg: rgba(48, 209, 88, 0.12);
 
   --font-mono:       'SF Mono', 'Menlo', 'Consolas', monospace;
   --font-sans:       'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -844,6 +846,110 @@ input:focus-visible { outline: none; }
   flex-shrink: 0;
 }
 
+/* === Currency Info === */
+.currency-info {
+  width: 100%;
+  text-align: center;
+  margin-top: var(--spacing-sm);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.currency-info[hidden] { display: none; }
+
+.currency-info__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.currency-info__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  display: inline-block;
+}
+
+.currency-info__dot--offline {
+  background: var(--orange);
+}
+
+/* === Share Button === */
+.share-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: var(--bg-elevated);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--duration-med) var(--ease-out),
+              transform var(--duration-fast) var(--ease-spring);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.share-btn:hover,
+.share-btn:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-bg);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent), transparent 70%);
+  transform: scale(1.08);
+}
+
+.share-btn:active {
+  transform: scale(0.92);
+}
+
+/* === Global Toast === */
+.global-toast {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--green);
+  color: #000;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 20px;
+  border-radius: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-fast) var(--ease-out),
+              transform var(--duration-fast) var(--ease-out);
+  z-index: 200;
+}
+
+.global-toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* === Expression hint === */
+.converter__expr-hint {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-out);
+  text-align: center;
+}
+
+.converter__expr-hint.visible {
+  opacity: 1;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -861,6 +967,7 @@ input:focus-visible { outline: none; }
   <div class="converter" role="tabpanel" id="converter">
     <div class="converter__input-section">
       <input type="text" inputmode="decimal" class="converter__input" id="input-from" value="1" autocomplete="off" autofocus aria-label="Исходное значение">
+      <div class="converter__expr-hint" id="expr-hint-from"></div>
       <button class="unit-pill" id="pill-from" aria-haspopup="listbox">
         <span class="unit-pill__label" id="pill-from-label"></span>
         <span class="unit-pill__arrow">&#9662;</span>
@@ -879,6 +986,15 @@ input:focus-visible { outline: none; }
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
           <span class="copy-result-btn__toast" id="copy-toast">Скопировано!</span>
         </button>
+        <button class="share-btn" id="share-btn" aria-label="Поделиться результатом">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+        </button>
+      </div>
+      <div class="currency-info" id="currency-info" hidden>
+        <span class="currency-info__status">
+          <span class="currency-info__dot" id="currency-dot"></span>
+          <span id="currency-info-text"></span>
+        </span>
       </div>
       <button class="unit-pill" id="pill-to" aria-haspopup="listbox">
         <span class="unit-pill__label" id="pill-to-label"></span>
@@ -909,11 +1025,68 @@ input:focus-visible { outline: none; }
       <div class="unit-overlay__grid" id="unit-grid"></div>
     </div>
   </div>
+  <div class="global-toast" id="global-toast"></div>
 </div>
 
 <script>
 (function() {
   'use strict';
+
+  // === Safe Math Expression Parser ===
+  // Supports: +, -, *, /, parentheses, decimals, negation
+  function safeMathEval(expr) {
+    // Remove spaces
+    var s = expr.replace(/\s/g, '');
+    if (!s) return null;
+    // Only allow digits, operators, parens, dots
+    if (!/^[0-9+\-*/().]+$/.test(s)) return null;
+    // Must contain an operator to be an expression
+    if (!/[+\-*/]/.test(s.replace(/^-/, ''))) return null;
+
+    var pos = 0;
+    function parseExpr() {
+      var result = parseTerm();
+      while (pos < s.length && (s[pos] === '+' || s[pos] === '-')) {
+        var op = s[pos++];
+        var right = parseTerm();
+        if (right === null) return null;
+        result = op === '+' ? result + right : result - right;
+      }
+      return result;
+    }
+    function parseTerm() {
+      var result = parseFactor();
+      while (pos < s.length && (s[pos] === '*' || s[pos] === '/')) {
+        var op = s[pos++];
+        var right = parseFactor();
+        if (right === null) return null;
+        if (op === '/') { if (right === 0) return null; result /= right; }
+        else result *= right;
+      }
+      return result;
+    }
+    function parseFactor() {
+      if (pos >= s.length) return null;
+      // Unary minus
+      if (s[pos] === '-') { pos++; var v = parseFactor(); return v === null ? null : -v; }
+      // Parentheses
+      if (s[pos] === '(') {
+        pos++; // skip (
+        var result = parseExpr();
+        if (pos < s.length && s[pos] === ')') pos++; else return null;
+        return result;
+      }
+      // Number
+      var start = pos;
+      while (pos < s.length && (s[pos] >= '0' && s[pos] <= '9' || s[pos] === '.')) pos++;
+      if (pos === start) return null;
+      var num = parseFloat(s.substring(start, pos));
+      return isNaN(num) ? null : num;
+    }
+    var result = parseExpr();
+    if (pos !== s.length) return null; // leftover chars = invalid
+    return result;
+  }
 
   // === Data ===
   const categories = {
@@ -960,6 +1133,22 @@ input:focus-visible { outline: none; }
         cup: { name: 'чашки', full: 'чашки US',   factor: 236.588 },
       },
       defaultFrom: 'l', defaultTo: 'gal'
+    },
+    currency: {
+      name: 'Валюта', accent: 'currency', base: 'USD',
+      units: {
+        USD: { name: 'USD', full: 'Доллар США',     factor: 1 },
+        EUR: { name: 'EUR', full: 'Евро',           factor: 1 },
+        GBP: { name: 'GBP', full: 'Фунт стерл.',   factor: 1 },
+        JPY: { name: 'JPY', full: 'Иена',           factor: 1 },
+        CNY: { name: 'CNY', full: 'Юань',           factor: 1 },
+        RUB: { name: 'RUB', full: 'Рубль',          factor: 1 },
+        KZT: { name: 'KZT', full: 'Тенге',          factor: 1 },
+        TRY: { name: 'TRY', full: 'Тур. лира',      factor: 1 },
+        INR: { name: 'INR', full: 'Рупия',          factor: 1 },
+        BRL: { name: 'BRL', full: 'Реал',           factor: 1 },
+      },
+      defaultFrom: 'USD', defaultTo: 'EUR'
     }
   };
 
@@ -1056,11 +1245,117 @@ input:focus-visible { outline: none; }
   }
 
   // Parse user input: strip spaces, allow minus and decimal point
+  // Also supports math expressions like "2+3", "10*5.5", "100/3"
   function parseInput(str) {
     if (!str || str.trim() === '' || str.trim() === '-') return null;
-    var cleaned = str.replace(/\s/g, '').replace(',', '.');
+    var cleaned = str.replace(/\s/g, '').replace(/,/g, '.');
+    // Try as plain number first
     var num = parseFloat(cleaned);
+    if (!isNaN(num) && /^-?\d*\.?\d+$/.test(cleaned)) return num;
+    // Try as math expression
+    var exprResult = safeMathEval(cleaned);
+    if (exprResult !== null && isFinite(exprResult)) return exprResult;
+    // Fallback: parseFloat
     return isNaN(num) ? null : num;
+  }
+
+  // Check if string contains a math expression (for hint display)
+  function isExpression(str) {
+    if (!str) return false;
+    var cleaned = str.replace(/\s/g, '').replace(/,/g, '.');
+    if (/^-?\d*\.?\d*$/.test(cleaned)) return false; // plain number
+    return safeMathEval(cleaned) !== null;
+  }
+
+  // === Currency API ===
+  var CURRENCY_CACHE_KEY = 'uniswap_currency_rates';
+  var CURRENCY_API = 'https://open.er-api.com/v6/latest/USD';
+  var currencyRates = null; // { rates: {...}, timestamp: ..., date: '...' }
+
+  function loadCachedRates() {
+    try {
+      var raw = localStorage.getItem(CURRENCY_CACHE_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch(e) { return null; }
+  }
+
+  function saveCachedRates(data) {
+    try { localStorage.setItem(CURRENCY_CACHE_KEY, JSON.stringify(data)); } catch(e) {}
+  }
+
+  function isCacheValid(cached) {
+    if (!cached || !cached.timestamp) return false;
+    return (Date.now() - cached.timestamp) < 3600000; // 1 hour
+  }
+
+  function applyCurrencyRates(data) {
+    currencyRates = data;
+    var c = categories.currency;
+    var codes = Object.keys(c.units);
+    codes.forEach(function(code) {
+      if (data.rates[code] !== undefined) {
+        c.units[code].factor = 1 / data.rates[code]; // factor = how many USD per 1 unit
+      }
+    });
+    // USD factor is always 1
+    c.units.USD.factor = 1;
+    updateCurrencyInfo();
+    // Re-convert if currently on currency
+    if (currentCategory === 'currency') {
+      buildAllUnitsDOM();
+      doConversion();
+    }
+  }
+
+  function updateCurrencyInfo() {
+    var $info = document.getElementById('currency-info');
+    var $text = document.getElementById('currency-info-text');
+    var $dot = document.getElementById('currency-dot');
+    if (currentCategory !== 'currency') {
+      $info.hidden = true;
+      return;
+    }
+    $info.hidden = false;
+    if (currencyRates && currencyRates.date) {
+      var cached = loadCachedRates();
+      var isOld = cached && !isCacheValid(cached);
+      $text.textContent = 'Курсы: ' + currencyRates.date + (isOld ? ' (кэш)' : '');
+      $dot.className = 'currency-info__dot' + (isOld ? ' currency-info__dot--offline' : '');
+    } else {
+      $text.textContent = 'Загрузка курсов...';
+      $dot.className = 'currency-info__dot currency-info__dot--offline';
+    }
+  }
+
+  function fetchCurrencyRates() {
+    var cached = loadCachedRates();
+    if (cached && isCacheValid(cached)) {
+      applyCurrencyRates(cached);
+      return;
+    }
+    // Try to use cached data immediately (offline fallback)
+    if (cached) {
+      applyCurrencyRates(cached);
+    }
+    // Fetch fresh
+    fetch(CURRENCY_API)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data && data.rates) {
+          var cacheEntry = {
+            rates: data.rates,
+            date: data.time_last_update_utc ? data.time_last_update_utc.split(' 00:')[0] : new Date().toLocaleDateString(),
+            timestamp: Date.now()
+          };
+          saveCachedRates(cacheEntry);
+          applyCurrencyRates(cacheEntry);
+        }
+      })
+      .catch(function() {
+        // Offline — use cached if available
+        if (cached) applyCurrencyRates(cached);
+      });
   }
 
   // === Conversion logic ===
@@ -1069,6 +1364,12 @@ input:focus-visible { outline: none; }
     var c = categories[cat];
     if (cat === 'temp') {
       return convertTemp(value, from, to);
+    }
+    if (cat === 'currency') {
+      // Convert via USD: value in `from` -> USD -> `to`
+      var fromRate = currencyRates && currencyRates.rates[from] ? currencyRates.rates[from] : 1;
+      var toRate = currencyRates && currencyRates.rates[to] ? currencyRates.rates[to] : 1;
+      return value / fromRate * toRate;
     }
     var fromFactor = c.units[from].factor;
     var toFactor = c.units[to].factor;
@@ -1089,7 +1390,16 @@ input:focus-visible { outline: none; }
   }
 
   function doConversion() {
+    var $exprHint = document.getElementById('expr-hint-from');
     if (lastEditedField === 'from') {
+      // Show expression hint
+      if (isExpression($inputFrom.value)) {
+        var exprVal = safeMathEval($inputFrom.value.replace(/\s/g, '').replace(/,/g, '.'));
+        $exprHint.textContent = '= ' + formatNumber(exprVal);
+        $exprHint.classList.add('visible');
+      } else {
+        $exprHint.classList.remove('visible');
+      }
       var val = parseInput($inputFrom.value);
       if (val === null) {
         $inputTo.value = '';
@@ -1099,6 +1409,7 @@ input:focus-visible { outline: none; }
         flashResult($inputTo);
       }
     } else {
+      $exprHint.classList.remove('visible');
       var val = parseInput($inputTo.value);
       if (val === null) {
         $inputFrom.value = '';
@@ -1244,6 +1555,8 @@ input:focus-visible { outline: none; }
       doConversion();
       updateFavStar();
       renderFavorites();
+      updateCurrencyInfo();
+      if (cat === 'currency') fetchCurrencyRates();
 
       // Fade in
       requestAnimationFrame(function() {
@@ -1462,6 +1775,35 @@ input:focus-visible { outline: none; }
       copyToastTimer = setTimeout(function() {
         $copyToast.classList.remove('visible');
       }, 1200);
+    });
+  });
+
+  // === Global Toast ===
+  var $globalToast = document.getElementById('global-toast');
+  var globalToastTimer = null;
+
+  function showGlobalToast(msg) {
+    $globalToast.textContent = msg;
+    $globalToast.classList.add('visible');
+    clearTimeout(globalToastTimer);
+    globalToastTimer = setTimeout(function() {
+      $globalToast.classList.remove('visible');
+    }, 1500);
+  }
+
+  // === Share Button ===
+  var $shareBtn = document.getElementById('share-btn');
+
+  $shareBtn.addEventListener('click', function() {
+    var valFrom = $inputFrom.value;
+    var valTo = $inputTo.value;
+    if (!valTo || valTo === '--' || valTo === '\u2014') return;
+    var c = categories[currentCategory];
+    var fromName = c.units[fromUnit].name;
+    var toName = c.units[toUnit].name;
+    var shareText = valFrom + ' ' + fromName + ' = ' + valTo + ' ' + toName + ' \u2014 via UniSwap';
+    copyText(shareText).then(function() {
+      showGlobalToast('Copied!');
     });
   });
 
@@ -1755,6 +2097,10 @@ input:focus-visible { outline: none; }
   };
 
   // === Init ===
+  // Pre-load currency rates from cache so currency tab works immediately
+  var cachedRates = loadCachedRates();
+  if (cachedRates) applyCurrencyRates(cachedRates);
+
   buildTabs();
   setAccent(categories[currentCategory].accent);
   updatePills();
@@ -1765,6 +2111,10 @@ input:focus-visible { outline: none; }
   renderFavorites();
   renderHistory();
   initOnboarding();
+  updateCurrencyInfo();
+
+  // Prefetch currency rates in background
+  fetchCurrencyRates();
 
   // Autofocus
   requestAnimationFrame(function() { $inputFrom.focus(); });

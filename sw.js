@@ -1,4 +1,4 @@
-const CACHE = 'uniswap-v4.2';
+const CACHE = 'uniswap-v5';
 const ASSETS = ['./', './index.html'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
@@ -9,5 +9,10 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 self.addEventListener('fetch', e => {
+  // Let currency API requests go to network first
+  if (e.request.url.includes('er-api.com')) {
+    e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+    return;
+  }
   e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
 });
