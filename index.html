@@ -1372,6 +1372,11 @@ input:focus-visible { outline: none; }
 .oc-footer{text-align:center;padding:20px 16px 24px;margin-top:24px}
 .oc-footer a{font-size:.78rem;color:var(--text-muted,var(--text-secondary,#888));text-decoration:none;opacity:.6;transition:opacity .2s}
 .oc-footer a:hover{opacity:1}
+/* v17: Skip-to-content link */
+.skip-to-content{position:absolute;top:-100%;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;padding:8px 20px;border-radius:8px;font-weight:600;font-size:0.9rem;z-index:9999;text-decoration:none;white-space:nowrap;transition:top .2s}
+.skip-to-content:focus{top:8px}
+/* v17: Visible labels for inputs */
+.converter__label{display:block;font-size:0.72rem;font-weight:600;color:var(--text-secondary);margin-bottom:4px;letter-spacing:0.02em}
 </style>
 </head>
 <body>
@@ -1390,6 +1395,8 @@ input:focus-visible { outline: none; }
   </div>
 </div>
 
+<a href="#converter" class="skip-to-content">Skip to content</a>
+
 <div class="app">
   <div class="tabs" role="tablist" id="tabs"></div>
   <div class="category-desc" id="category-desc" style="text-align:center;font-size:0.72rem;color:var(--text-secondary);padding:4px 16px 0;opacity:0.7;min-height:1.2em"></div>
@@ -1398,8 +1405,9 @@ input:focus-visible { outline: none; }
   </div>
   <div class="converter" role="tabpanel" id="converter">
     <div class="converter__input-section">
+      <label for="input-from" class="converter__label">Исходное значение</label>
       <div class="converter__input-row">
-        <input type="text" inputmode="decimal" class="converter__input" id="input-from" value="1" placeholder="e.g. 100" autocomplete="off" autofocus aria-label="Исходное значение">
+        <input type="text" inputmode="decimal" class="converter__input" id="input-from" value="1" placeholder="e.g. 100" autocomplete="off" autofocus>
         <button class="voice-btn" id="voice-btn" aria-label="Voice input" title="Voice input">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="1" width="6" height="11" rx="3"/><path d="M19 10v1a7 7 0 01-14 0v-1"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
         </button>
@@ -1421,8 +1429,9 @@ input:focus-visible { outline: none; }
       </button>
     </div>
     <div class="converter__result-section">
+      <label for="input-to" class="converter__label">Результат</label>
       <div class="converter__result-row">
-        <input type="text" inputmode="decimal" class="converter__result-input" id="input-to" autocomplete="off" aria-label="Результат" aria-live="polite">
+        <input type="text" inputmode="decimal" class="converter__result-input" id="input-to" autocomplete="off" aria-live="polite">
         <button class="copy-result-btn" id="copy-result-btn" aria-label="Копировать результат">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
           <span class="copy-result-btn__toast" id="copy-toast">Скопировано!</span>

@@ -1,5 +1,26 @@
 # UniSwap — Changelog
 
+## v17.0 (2026-03-29) — Accessibility Pass
+
+Feature update by Mario.
+
+### Skip-to-Content Link
+- New skip-to-content link at top of page, visible on keyboard focus
+- Targets `#converter` panel for quick access
+
+### Visible Input Labels
+- Added visible `<label>` elements for both input fields ("Исходное значение" and "Результат")
+- Replaces `aria-label` only approach with proper `<label for="">` association
+- Styled as subtle secondary text above each input
+
+### Result Screen Reader Announcement
+- `aria-live="polite"` already present on result input; verified working
+
+### Service Worker
+- Cache version bumped to `uniswap-v17`
+
+---
+
 ## v16.0 (2026-03-29) — Pinned Conversion Pair
 
 - **Conversion Pin**: Double-click the star button to pin a favorite conversion pair to the top for quick access
