@@ -1135,6 +1135,19 @@ input:focus-visible { outline: none; }
 
 .converter__formula[hidden] { display: none; }
 
+/* === v13: Conversion Explanation === */
+.converter__explanation {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-top: 4px;
+  opacity: 0.55;
+  line-height: 1.5;
+  width: 100%;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+.converter__explanation[hidden] { display: none; }
+
 /* === Common Conversions Cheat Sheet (v12) === */
 .cheat-sheet {
   width: 100%;
@@ -1384,6 +1397,7 @@ input:focus-visible { outline: none; }
         <span class="unit-pill__arrow">&#9662;</span>
       </button>
       <div class="converter__formula" id="conversion-formula" hidden></div>
+      <div class="converter__explanation" id="conversion-explanation" hidden></div>
     </div>
     <button class="fav-star-btn" id="fav-star-btn" aria-label="Добавить в избранное">&#9733;</button>
     <div class="favorites" id="favorites" hidden>
@@ -1857,6 +1871,47 @@ input:focus-visible { outline: none; }
     var toName = c.units[toUnit].name;
     $formula.hidden = false;
     $formula.textContent = '1 ' + fromName + ' = ' + formatNumber(result) + ' ' + toName;
+  }
+
+  // === v13: Conversion Explanation ===
+  var $explanation = document.getElementById('conversion-explanation');
+
+  function updateExplanation() {
+    if (fromUnit === toUnit) { $explanation.hidden = true; return; }
+    var c = categories[currentCategory];
+    if (currentCategory === 'temp') {
+      var explanations = {
+        'C-F': 'How this works: Multiply by 9/5, then add 32.',
+        'F-C': 'How this works: Subtract 32, multiply by 5/9.',
+        'C-K': 'How this works: Add 273.15 to Celsius.',
+        'K-C': 'How this works: Subtract 273.15 from Kelvin.',
+        'F-K': 'How this works: Subtract 32, multiply by 5/9, then add 273.15.',
+        'K-F': 'How this works: Subtract 273.15, multiply by 9/5, then add 32.',
+      };
+      var key = fromUnit + '-' + toUnit;
+      $explanation.hidden = false;
+      $explanation.textContent = explanations[key] || '';
+      return;
+    }
+    if (currentCategory === 'currency') {
+      $explanation.hidden = false;
+      $explanation.textContent = 'How this works: Convert via live exchange rates (updated hourly).';
+      return;
+    }
+    // Factor-based categories
+    var fromFactor = c.units[fromUnit].factor;
+    var toFactor = c.units[toUnit].factor;
+    var fromName = c.units[fromUnit].name;
+    var toName = c.units[toUnit].name;
+    var baseName = c.units[c.base] ? c.units[c.base].name : c.base;
+    var ratio = fromFactor / toFactor;
+    $explanation.hidden = false;
+    if (fromFactor === 1 || toFactor === 1) {
+      // Direct: one of them is the base unit
+      $explanation.textContent = 'How this works: 1 ' + fromName + ' = ' + formatNumber(fromFactor) + ' ' + baseName + '. Multiply by ' + formatNumber(ratio) + ' to get ' + toName + '.';
+    } else {
+      $explanation.textContent = 'How this works: Convert ' + fromName + ' \u2192 ' + baseName + ' (\u00D7' + formatNumber(fromFactor) + '), then ' + baseName + ' \u2192 ' + toName + ' (\u00F7' + formatNumber(toFactor) + ').';
+    }
   }
 
   function fetchCurrencyRates() {
@@ -2842,6 +2897,7 @@ input:focus-visible { outline: none; }
     updateHash();
     saveLastConversion();
     updateFormula();
+    updateExplanation();
   };
 
   // === Auto-save Last Conversion ===

@@ -1,5 +1,22 @@
 # UniSwap — Changelog
 
+## v13.0 (2026-03-29) — "Show Your Work"
+
+Feature update by Mario.
+
+### Conversion Explanation
+- Human-readable formula appears below the result explaining how the conversion works
+- Temperature: shows specific formula (e.g. "Multiply by 9/5, then add 32")
+- Factor-based categories: shows the step-by-step path through the base unit with multipliers
+- Currency: explains that conversion uses live exchange rates updated hourly
+- Hidden when from and to units are identical
+- Updates live on every conversion and unit change
+
+### Service Worker
+- Cache version bumped to `uniswap-v13`
+
+---
+
 ## v12.0 (2026-03-29) — "Power User"
 
 Feature update by Mario.
