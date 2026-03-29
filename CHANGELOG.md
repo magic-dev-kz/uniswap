@@ -1,5 +1,23 @@
 # UniSwap — Changelog
 
+## v10.0 (2026-03-29) — "Micro-polish"
+
+Feature update by Mario.
+
+### Stale Rates Warning
+- When cached currency rates are older than 24 hours, "Rates may be outdated" text turns yellow/orange
+
+### Input Placeholder
+- Conversion input already carries placeholder "e.g. 100"
+
+### Tab Emoji Icons Larger
+- Category tab emoji icons bumped from 1.1em to 1.5rem
+
+### Service Worker
+- Cache version bumped to `uniswap-v10`
+
+---
+
 ## v9.0 (2026-03-29) — "Share, Polish & Icons"
 
 Feature update by Mario.

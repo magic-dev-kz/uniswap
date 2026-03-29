@@ -1076,12 +1076,13 @@ input:focus-visible { outline: none; }
 <body>
 <div class="app">
   <div class="tabs" role="tablist" id="tabs"></div>
+  <div class="category-desc" id="category-desc" style="text-align:center;font-size:0.72rem;color:var(--text-secondary);padding:4px 16px 0;opacity:0.7;min-height:1.2em"></div>
   <div class="onboarding-tooltip" id="onboarding-tooltip">
     <div class="onboarding-tooltip__inner">Переключайтесь между категориями &#8593;</div>
   </div>
   <div class="converter" role="tabpanel" id="converter">
     <div class="converter__input-section">
-      <input type="text" inputmode="decimal" class="converter__input" id="input-from" value="1" autocomplete="off" autofocus aria-label="Исходное значение">
+      <input type="text" inputmode="decimal" class="converter__input" id="input-from" value="1" placeholder="e.g. 100" autocomplete="off" autofocus aria-label="Исходное значение">
       <div class="converter__expr-hint" id="expr-hint-from"></div>
       <button class="unit-pill" id="pill-from" aria-haspopup="listbox">
         <span class="unit-pill__label" id="pill-from-label"></span>
@@ -1208,6 +1209,8 @@ input:focus-visible { outline: none; }
 
   // === Data ===
   var categoryIcons = {length:'\uD83D\uDCCF',weight:'\u2696\uFE0F',temp:'\uD83C\uDF21\uFE0F',volume:'\uD83E\uDDEA',area:'\uD83D\uDCD0',currency:'\uD83D\uDCB0'};
+  // v10: Category descriptions
+  var categoryDescs = {length:'mm, cm, m, km, in, ft, yd, mi',weight:'mg, g, kg, lb, oz',temp:'Celsius, Fahrenheit, Kelvin',volume:'ml, L, gal, cup',area:'m\u00B2, ft\u00B2, yd\u00B2, acres, ha, km\u00B2, mi\u00B2',currency:'USD, EUR, GBP, JPY, CNY, RUB & more'};
   const categories = {
     length: {
       name: 'Длина', accent: 'length', base: 'm',
@@ -1421,6 +1424,12 @@ input:focus-visible { outline: none; }
     return (Date.now() - cached.timestamp) < 3600000; // 1 hour
   }
 
+  // v10: Check if rates are older than 24 hours
+  function isCacheOlderThan24h(cached) {
+    if (!cached || !cached.timestamp) return false;
+    return (Date.now() - cached.timestamp) > 86400000; // 24 hours
+  }
+
   function applyCurrencyRates(data) {
     currencyRates = data;
     var c = categories.currency;
@@ -1452,7 +1461,10 @@ input:focus-visible { outline: none; }
     if (currencyRates && currencyRates.date) {
       var cached = loadCachedRates();
       var isOld = cached && !isCacheValid(cached);
-      $text.textContent = 'Курсы: ' + currencyRates.date + (isOld ? ' (кэш)' : '');
+      var isStale = cached && isCacheOlderThan24h(cached);
+      var suffix = isStale ? ' \u2014 Rates may be outdated' : (isOld ? ' (кэш)' : '');
+      $text.textContent = 'Курсы: ' + currencyRates.date + suffix;
+      $text.style.color = isStale ? 'var(--orange)' : '';
       $dot.className = 'currency-info__dot' + (isOld ? ' currency-info__dot--offline' : '');
     } else {
       $text.textContent = 'Загрузка курсов...';
@@ -1788,6 +1800,12 @@ input:focus-visible { outline: none; }
   }
 
   // === Tabs ===
+  var $categoryDesc = document.getElementById('category-desc');
+
+  function updateCategoryDesc() {
+    $categoryDesc.textContent = categoryDescs[currentCategory] || '';
+  }
+
   function buildTabs() {
     $tabs.innerHTML = '';
     Object.keys(categories).forEach(function(key) {
@@ -1797,10 +1815,11 @@ input:focus-visible { outline: none; }
       btn.dataset.category = key;
       btn.setAttribute('aria-selected', key === currentCategory ? 'true' : 'false');
       btn.tabIndex = (key === currentCategory) ? 0 : -1;
-      btn.innerHTML = '<span class="tab-icon" style="margin-right:2px;font-size:1.1em">' + (categoryIcons[key]||'') + '</span>' + categories[key].name;
+      btn.innerHTML = '<span class="tab-icon" style="margin-right:2px;font-size:1.5rem">' + (categoryIcons[key]||'') + '</span>' + categories[key].name;
       btn.addEventListener('click', function() { switchCategory(key); });
       $tabs.appendChild(btn);
     });
+    updateCategoryDesc();
   }
 
   function switchCategory(cat) {
@@ -1834,6 +1853,7 @@ input:focus-visible { outline: none; }
 
       setAccent(c.accent);
       updatePills();
+      updateCategoryDesc();
 
       // Reset input
       lastEditedField = 'from';

@@ -1,4 +1,4 @@
-const CACHE = 'uniswap-v9';
+const CACHE = 'uniswap-v10';
 const ASSETS = ['./', './index.html'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
