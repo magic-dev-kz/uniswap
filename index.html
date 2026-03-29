@@ -1341,8 +1341,10 @@ input:focus-visible { outline: none; }
     if (cached) {
       applyCurrencyRates(cached);
     }
-    // Fetch fresh
-    fetch(CURRENCY_API)
+    // Fetch fresh (15s timeout)
+    var ctrl = new AbortController();
+    var tid = setTimeout(function() { ctrl.abort(); }, 15000);
+    fetch(CURRENCY_API, { signal: ctrl.signal })
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (data && data.rates) {
@@ -1356,9 +1358,10 @@ input:focus-visible { outline: none; }
         }
       })
       .catch(function() {
-        // Offline — use cached if available
+        // Offline or timeout — use cached if available
         if (cached) applyCurrencyRates(cached);
-      });
+      })
+      .finally(function() { clearTimeout(tid); });
   }
 
   // === Conversion logic ===
