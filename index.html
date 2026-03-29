@@ -956,6 +956,9 @@ input:focus-visible { outline: none; }
     transition-duration: 0.01ms !important;
   }
 }
+.oc-footer{text-align:center;padding:20px 16px 24px;margin-top:24px}
+.oc-footer a{font-size:.78rem;color:var(--text-muted,var(--text-secondary,#888));text-decoration:none;opacity:.6;transition:opacity .2s}
+.oc-footer a:hover{opacity:1}
 </style>
 </head>
 <body>
@@ -2122,5 +2125,6 @@ input:focus-visible { outline: none; }
 })();
 if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(function(){});}
 </script>
+<div class="oc-footer"><a href="https://magic-dev-kz.github.io/openclaw/" target="_blank" rel="noopener">More free tools → OpenClaw</a></div>
 </body>
 </html>
