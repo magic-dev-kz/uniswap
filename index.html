@@ -35,12 +35,14 @@
   --accent-temp:     #FF453A;
   --accent-volume:   #64D2FF;
   --accent-currency: #30D158;
+  --accent-area:     #BF5AF2;
 
   --accent-length-bg:  rgba(10, 132, 255, 0.12);
   --accent-weight-bg:  rgba(255, 159, 10, 0.12);
   --accent-temp-bg:    rgba(255, 69, 58, 0.12);
   --accent-volume-bg:  rgba(100, 210, 255, 0.12);
   --accent-currency-bg: rgba(48, 209, 88, 0.12);
+  --accent-area-bg:    rgba(191, 90, 242, 0.12);
 
   --font-mono:       'SF Mono', 'Menlo', 'Consolas', monospace;
   --font-sans:       'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -1007,6 +1009,62 @@ input:focus-visible { outline: none; }
     transition-duration: 0.01ms !important;
   }
 }
+/* === Quick Presets === */
+.quick-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.quick-presets[hidden] { display: none; }
+
+.quick-preset-btn {
+  padding: 6px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  background: var(--bg-elevated);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out),
+              transform var(--duration-fast) var(--ease-spring);
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+
+.quick-preset-btn:hover,
+.quick-preset-btn:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-bg);
+  transform: scale(1.05);
+}
+
+.quick-preset-btn:active {
+  transform: scale(0.95);
+}
+
+/* === Conversion Formula === */
+.converter__formula {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-top: 6px;
+  opacity: 0.7;
+  transition: opacity var(--duration-fast) var(--ease-out);
+  width: 100%;
+}
+
+.converter__formula[hidden] { display: none; }
+
 .oc-footer{text-align:center;padding:20px 16px 24px;margin-top:24px}
 .oc-footer a{font-size:.78rem;color:var(--text-muted,var(--text-secondary,#888));text-decoration:none;opacity:.6;transition:opacity .2s}
 .oc-footer a:hover{opacity:1}
@@ -1026,6 +1084,7 @@ input:focus-visible { outline: none; }
         <span class="unit-pill__label" id="pill-from-label"></span>
         <span class="unit-pill__arrow">&#9662;</span>
       </button>
+      <div class="quick-presets" id="quick-presets"></div>
     </div>
     <button class="swap-btn" id="swap-btn" aria-label="Поменять единицы местами">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1054,6 +1113,7 @@ input:focus-visible { outline: none; }
         <span class="unit-pill__label" id="pill-to-label"></span>
         <span class="unit-pill__arrow">&#9662;</span>
       </button>
+      <div class="converter__formula" id="conversion-formula" hidden></div>
     </div>
     <button class="fav-star-btn" id="fav-star-btn" aria-label="Добавить в избранное">&#9733;</button>
     <div class="favorites" id="favorites" hidden>
@@ -1188,6 +1248,19 @@ input:focus-visible { outline: none; }
         cup: { name: 'чашки', full: 'чашки US',   factor: 236.588 },
       },
       defaultFrom: 'l', defaultTo: 'gal'
+    },
+    area: {
+      name: 'Площадь', accent: 'area', base: 'sqm',
+      units: {
+        sqm:  { name: 'м²',      full: 'кв. метры',   factor: 1 },
+        sqft: { name: 'фут²',    full: 'кв. футы',    factor: 0.092903 },
+        sqyd: { name: 'ярд²',    full: 'кв. ярды',    factor: 0.836127 },
+        acre: { name: 'акры',    full: 'акры',         factor: 4046.86 },
+        ha:   { name: 'га',      full: 'гектары',      factor: 10000 },
+        sqkm: { name: 'км²',     full: 'кв. километры', factor: 1000000 },
+        sqmi: { name: 'миля²',   full: 'кв. мили',    factor: 2589988.11 },
+      },
+      defaultFrom: 'sqm', defaultTo: 'sqft'
     },
     currency: {
       name: 'Валюта', accent: 'currency', base: 'USD',
@@ -1381,6 +1454,109 @@ input:focus-visible { outline: none; }
       $text.textContent = 'Загрузка курсов...';
       $dot.className = 'currency-info__dot currency-info__dot--offline';
     }
+  }
+
+  // === Quick Presets ===
+  var quickPresets = {
+    length: [
+      { label: '1 mi \u2192 km', value: '1', from: 'mi', to: 'km' },
+      { label: '1 in \u2192 cm', value: '1', from: 'in', to: 'cm' },
+      { label: '1 ft \u2192 m',  value: '1', from: 'ft', to: 'm' },
+      { label: '100 m \u2192 ft', value: '100', from: 'm', to: 'ft' },
+    ],
+    weight: [
+      { label: '1 lb \u2192 kg', value: '1', from: 'lb', to: 'kg' },
+      { label: '1 oz \u2192 g',  value: '1', from: 'oz', to: 'g' },
+      { label: '100 kg \u2192 lb', value: '100', from: 'kg', to: 'lb' },
+    ],
+    temp: [
+      { label: '0\u00B0C \u2192 \u00B0F', value: '0', from: 'C', to: 'F' },
+      { label: '100\u00B0C \u2192 \u00B0F', value: '100', from: 'C', to: 'F' },
+      { label: '72\u00B0F \u2192 \u00B0C', value: '72', from: 'F', to: 'C' },
+    ],
+    volume: [
+      { label: '1 gal \u2192 l', value: '1', from: 'gal', to: 'l' },
+      { label: '1 l \u2192 cup', value: '1', from: 'l', to: 'cup' },
+      { label: '500 ml \u2192 cup', value: '500', from: 'ml', to: 'cup' },
+    ],
+    area: [
+      { label: '1 acre \u2192 м\u00B2', value: '1', from: 'acre', to: 'sqm' },
+      { label: '1 га \u2192 acre', value: '1', from: 'ha', to: 'acre' },
+      { label: '1 км\u00B2 \u2192 mi\u00B2', value: '1', from: 'sqkm', to: 'sqmi' },
+    ],
+    currency: [
+      { label: '100 USD \u2192 EUR', value: '100', from: 'USD', to: 'EUR' },
+      { label: '1000 RUB \u2192 USD', value: '1000', from: 'RUB', to: 'USD' },
+      { label: '100 EUR \u2192 GBP', value: '100', from: 'EUR', to: 'GBP' },
+    ],
+  };
+
+  var $quickPresets = document.getElementById('quick-presets');
+
+  function renderQuickPresets() {
+    var presets = quickPresets[currentCategory];
+    $quickPresets.innerHTML = '';
+    if (!presets || presets.length === 0) {
+      $quickPresets.hidden = true;
+      return;
+    }
+    $quickPresets.hidden = false;
+    presets.forEach(function(p) {
+      var btn = document.createElement('button');
+      btn.className = 'quick-preset-btn';
+      btn.textContent = p.label;
+      btn.addEventListener('click', function() {
+        fromUnit = p.from;
+        toUnit = p.to;
+        $inputFrom.value = p.value;
+        lastEditedField = 'from';
+        updatePills();
+        skipCountUp = false;
+        doConversion();
+        updateFavStar();
+      });
+      $quickPresets.appendChild(btn);
+    });
+  }
+
+  // === Conversion Formula Display ===
+  var $formula = document.getElementById('conversion-formula');
+
+  function updateFormula() {
+    if (currentCategory === 'temp') {
+      // Show temp formula text
+      var formulas = {
+        'C-F': '\u00B0F = \u00B0C \u00D7 9/5 + 32',
+        'F-C': '\u00B0C = (\u00B0F \u2212 32) \u00D7 5/9',
+        'C-K': 'K = \u00B0C + 273.15',
+        'K-C': '\u00B0C = K \u2212 273.15',
+        'F-K': 'K = (\u00B0F \u2212 32) \u00D7 5/9 + 273.15',
+        'K-F': '\u00B0F = (K \u2212 273.15) \u00D7 9/5 + 32',
+      };
+      var key = fromUnit + '-' + toUnit;
+      if (fromUnit === toUnit) {
+        $formula.hidden = true;
+        return;
+      }
+      $formula.hidden = false;
+      $formula.textContent = formulas[key] || '';
+      return;
+    }
+    // Factor-based: show "1 fromUnit = X toUnit"
+    var c = categories[currentCategory];
+    if (!c || fromUnit === toUnit) {
+      $formula.hidden = true;
+      return;
+    }
+    var result = convert(1, fromUnit, toUnit, currentCategory);
+    if (result === null || !isFinite(result)) {
+      $formula.hidden = true;
+      return;
+    }
+    var fromName = c.units[fromUnit].name;
+    var toName = c.units[toUnit].name;
+    $formula.hidden = false;
+    $formula.textContent = '1 ' + fromName + ' = ' + formatNumber(result) + ' ' + toName;
   }
 
   function fetchCurrencyRates() {
@@ -1660,6 +1836,7 @@ input:focus-visible { outline: none; }
       doConversion();
       updateFavStar();
       renderFavorites();
+      renderQuickPresets();
       updateCurrencyInfo();
       if (cat === 'currency') fetchCurrencyRates();
 
@@ -2317,6 +2494,7 @@ input:focus-visible { outline: none; }
     _origDoConversion();
     updateHash();
     saveLastConversion();
+    updateFormula();
   };
 
   // === Auto-save Last Conversion ===
@@ -2358,7 +2536,7 @@ input:focus-visible { outline: none; }
     var isInputFocused = document.activeElement === $inputFrom || document.activeElement === $inputTo;
 
     // 1-5 switch categories (only when not typing in input)
-    if (!isInputFocused && e.key >= '1' && e.key <= '5') {
+    if (!isInputFocused && e.key >= '1' && e.key <= '6') {
       var idx = parseInt(e.key, 10) - 1;
       if (idx < categoryKeys.length) {
         e.preventDefault();
@@ -2396,6 +2574,7 @@ input:focus-visible { outline: none; }
   doConversion();
   updateFavStar();
   renderFavorites();
+  renderQuickPresets();
   renderHistory();
   initOnboarding();
   updateCurrencyInfo();
@@ -2415,6 +2594,7 @@ input:focus-visible { outline: none; }
       skipCountUp = false;
       updateFavStar();
       renderFavorites();
+      renderQuickPresets();
       updateCurrencyInfo();
       if (currentCategory === 'currency') fetchCurrencyRates();
     }

@@ -1,5 +1,37 @@
 # UniSwap — Changelog
 
+## v8.0 (2026-03-29) — "Area & Quick Access"
+
+Feature update by Mario.
+
+### New Category: Area (Площадь)
+- 6th category tab with purple accent (`#BF5AF2`).
+- 7 units: кв. метры (м²), кв. футы (фут²), кв. ярды (ярд²), акры, гектары (га), кв. километры (км²), кв. мили (миля²).
+- Factor-based conversion through base unit (м²), same as length/weight/volume.
+- Default pair: м² → фут².
+
+### Quick Conversion Presets
+- Row of preset buttons appears below the "from" unit pill.
+- Each category has 3-4 common conversions (e.g. "1 mi → km", "1 lb → kg", "0°C → °F", "1 acre → м²", "100 USD → EUR").
+- Clicking a preset fills in value, sets units, and triggers conversion immediately.
+- Presets rebuild on category switch.
+
+### Conversion Formula Display
+- Below the result unit pill, a formula line shows the conversion ratio: "1 км = 0.621371 мили".
+- For temperature, shows the actual formula (e.g. "°F = °C × 9/5 + 32").
+- Hidden when from and to units are the same.
+- Updates on every conversion/unit change.
+
+### Technical
+- Keyboard shortcuts expanded: `1`-`6` now switch categories.
+- SW cache bumped to `uniswap-v8`.
+
+### Preserved
+- All existing features intact.
+- HTML structure and accessibility attributes unchanged.
+
+---
+
 ## v7.0 (2026-03-29) — "Deep Links & Memory"
 
 Feature update by Mario.
