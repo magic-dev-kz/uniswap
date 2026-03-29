@@ -1446,6 +1446,12 @@ input:focus-visible { outline: none; }
       <div class="converter__explanation" id="conversion-explanation" hidden></div>
     </div>
     <button class="fav-star-btn" id="fav-star-btn" aria-label="Добавить в избранное">&#9733;</button>
+    <!-- v16: Pinned conversion pair -->
+    <div class="pinned-pair" id="pinned-pair" hidden style="margin-top:10px;padding:8px 14px;background:rgba(255,200,50,0.08);border:1.5px solid rgba(255,200,50,0.25);border-radius:10px;display:flex;align-items:center;gap:10px;cursor:pointer;">
+      <span style="font-size:1.1rem">&#128204;</span>
+      <span class="pinned-pair__text" id="pinned-pair-text" style="flex:1;font-size:0.88rem;font-weight:600;"></span>
+      <button class="pinned-pair__unpin" id="pinned-unpin-btn" aria-label="Открепить" style="background:none;border:none;cursor:pointer;font-size:0.7rem;color:var(--text-muted,#999);padding:4px 8px;">&times;</button>
+    </div>
     <div class="favorites" id="favorites" hidden>
       <div class="favorites__header">Избранное</div>
       <div class="favorites__list" id="favorites-list"></div>
@@ -2675,6 +2681,46 @@ input:focus-visible { outline: none; }
   }
 
   $favBtn.addEventListener('click', toggleFavorite);
+
+  // === v16: Pinned Pair ===
+  var PIN_KEY = 'uniswap_pinned';
+  var $pinnedPair = document.getElementById('pinned-pair');
+  var $pinnedText = document.getElementById('pinned-pair-text');
+  var $pinnedUnpin = document.getElementById('pinned-unpin-btn');
+
+  function loadPinned() {
+    try { var r = localStorage.getItem(PIN_KEY); return r ? JSON.parse(r) : null; } catch(e) { return null; }
+  }
+  function savePinned(p) {
+    try { if (p) localStorage.setItem(PIN_KEY, JSON.stringify(p)); else localStorage.removeItem(PIN_KEY); } catch(e) {}
+  }
+  function renderPinned() {
+    var p = loadPinned();
+    if (!p) { $pinnedPair.hidden = true; return; }
+    var c = categories[p.category];
+    if (!c || !c.units[p.from] || !c.units[p.to]) { savePinned(null); $pinnedPair.hidden = true; return; }
+    $pinnedText.textContent = c.units[p.from].name + ' \u2192 ' + c.units[p.to].name + ' (' + c.name + ')';
+    $pinnedPair.hidden = false;
+  }
+  $pinnedPair.addEventListener('click', function(e) {
+    if (e.target === $pinnedUnpin) return;
+    var p = loadPinned();
+    if (!p) return;
+    if (p.category !== currentCategory) {
+      switchCategory(p.category);
+      setTimeout(function() { fromUnit = p.from; toUnit = p.to; updatePills(); doConversion(); updateFavStar(); }, 250);
+    } else {
+      fromUnit = p.from; toUnit = p.to; updatePills(); doConversion(); updateFavStar();
+    }
+  });
+  $pinnedUnpin.addEventListener('click', function(e) { e.stopPropagation(); savePinned(null); renderPinned(); });
+
+  // Add pin button to long-press on fav star (double-click pins current pair)
+  $favBtn.addEventListener('dblclick', function() {
+    savePinned({ category: currentCategory, from: fromUnit, to: toUnit });
+    renderPinned();
+  });
+  renderPinned();
 
   // === History ===
   var $history = document.getElementById('history');

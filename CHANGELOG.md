@@ -1,5 +1,9 @@
 # UniSwap — Changelog
 
+## v16.0 (2026-03-29) — Pinned Conversion Pair
+
+- **Conversion Pin**: Double-click the star button to pin a favorite conversion pair to the top for quick access
+- SW cache bumped to `uniswap-v16`
 ## v15.0 (2026-03-29) — "Voice Input"
 
 Feature update by Mario.
