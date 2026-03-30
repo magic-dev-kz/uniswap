@@ -1,5 +1,14 @@
 # UniSwap — Changelog
 
+## v21.0 (2026-03-29) — Speed & Data Categories
+
+- **Speed category** (7th tab, icon 🚗): km/h, mph, m/s, knots, ft/s — factor-based through m/s
+- **Data category** (8th tab, icon 💾): B, KB, MB, GB, TB, PB — factor-based through bytes
+- **Quick presets**: speed (100 km/h → mph, 1 mach → km/h), data (1 GB → MB, 1 TB → GB)
+- **Keyboard shortcuts**: keys 1–8 now switch all 8 categories
+- CSS accent variables added for speed and data
+- SW cache bumped to `uniswap-v21`
+
 ## v20.0 (2026-03-29) — Print Styles
 
 - **Print stylesheet**: `@media print` rules — hides onboarding, tabs, swap/copy/share buttons; shows current conversion result with unit labels; white bg, black text; large font for readability

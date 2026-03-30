@@ -40,6 +40,8 @@
   --accent-volume:   #64D2FF;
   --accent-currency: #30D158;
   --accent-area:     #BF5AF2;
+  --accent-speed:    #FF6B6B;
+  --accent-data:     #5AC8FA;
 
   --accent-length-bg:  rgba(10, 132, 255, 0.12);
   --accent-weight-bg:  rgba(255, 159, 10, 0.12);
@@ -47,6 +49,8 @@
   --accent-volume-bg:  rgba(100, 210, 255, 0.12);
   --accent-currency-bg: rgba(48, 209, 88, 0.12);
   --accent-area-bg:    rgba(191, 90, 242, 0.12);
+  --accent-speed-bg:   rgba(255, 107, 107, 0.12);
+  --accent-data-bg:    rgba(90, 200, 250, 0.12);
 
   --font-mono:       'SF Mono', 'Menlo', 'Consolas', monospace;
   --font-sans:       'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -1587,9 +1591,9 @@ input:focus-visible { outline: none; }
   }
 
   // === Data ===
-  var categoryIcons = {length:'\uD83D\uDCCF',weight:'\u2696\uFE0F',temp:'\uD83C\uDF21\uFE0F',volume:'\uD83E\uDDEA',area:'\uD83D\uDCD0',currency:'\uD83D\uDCB0'};
+  var categoryIcons = {length:'\uD83D\uDCCF',weight:'\u2696\uFE0F',temp:'\uD83C\uDF21\uFE0F',volume:'\uD83E\uDDEA',area:'\uD83D\uDCD0',currency:'\uD83D\uDCB0',speed:'\uD83D\uDE97',data:'\uD83D\uDCBE'};
   // v10: Category descriptions
-  var categoryDescs = {length:'mm, cm, m, km, in, ft, yd, mi',weight:'mg, g, kg, lb, oz',temp:'Celsius, Fahrenheit, Kelvin',volume:'ml, L, gal, cup',area:'m\u00B2, ft\u00B2, yd\u00B2, acres, ha, km\u00B2, mi\u00B2',currency:'USD, EUR, GBP, JPY, CNY, RUB & more'};
+  var categoryDescs = {length:'mm, cm, m, km, in, ft, yd, mi',weight:'mg, g, kg, lb, oz',temp:'Celsius, Fahrenheit, Kelvin',volume:'ml, L, gal, cup',area:'m\u00B2, ft\u00B2, yd\u00B2, acres, ha, km\u00B2, mi\u00B2',currency:'USD, EUR, GBP, JPY, CNY, RUB & more',speed:'km/h, mph, m/s, knots, ft/s',data:'B, KB, MB, GB, TB, PB'};
   const categories = {
     length: {
       name: 'Длина', accent: 'length', base: 'm',
@@ -1663,6 +1667,29 @@ input:focus-visible { outline: none; }
         BRL: { name: 'BRL', full: 'Реал',           factor: 1 },
       },
       defaultFrom: 'USD', defaultTo: 'EUR'
+    },
+    speed: {
+      name: 'Скорость', accent: 'speed', base: 'ms',
+      units: {
+        kmh:   { name: 'км/ч',   full: 'километры в час',  factor: 0.277778 },
+        mph:   { name: 'mph',    full: 'мили в час',       factor: 0.44704 },
+        ms:    { name: 'м/с',    full: 'метры в секунду',  factor: 1 },
+        knots: { name: 'узлы',   full: 'узлы',             factor: 0.514444 },
+        fts:   { name: 'фут/с',  full: 'футы в секунду',   factor: 0.3048 },
+      },
+      defaultFrom: 'kmh', defaultTo: 'mph'
+    },
+    data: {
+      name: 'Данные', accent: 'data', base: 'B',
+      units: {
+        B:  { name: 'B',   full: 'байты',      factor: 1 },
+        KB: { name: 'KB',  full: 'килобайты',   factor: 1024 },
+        MB: { name: 'MB',  full: 'мегабайты',   factor: 1048576 },
+        GB: { name: 'GB',  full: 'гигабайты',   factor: 1073741824 },
+        TB: { name: 'TB',  full: 'терабайты',   factor: 1099511627776 },
+        PB: { name: 'PB',  full: 'петабайты',   factor: 1125899906842624 },
+      },
+      defaultFrom: 'GB', defaultTo: 'MB'
     }
   };
 
@@ -1883,6 +1910,14 @@ input:focus-visible { outline: none; }
       { label: '100 USD \u2192 EUR', value: '100', from: 'USD', to: 'EUR' },
       { label: '1000 RUB \u2192 USD', value: '1000', from: 'RUB', to: 'USD' },
       { label: '100 EUR \u2192 GBP', value: '100', from: 'EUR', to: 'GBP' },
+    ],
+    speed: [
+      { label: '100 км/ч \u2192 mph', value: '100', from: 'kmh', to: 'mph' },
+      { label: '1 mach \u2192 км/ч', value: '343', from: 'ms', to: 'kmh' },
+    ],
+    data: [
+      { label: '1 GB \u2192 MB', value: '1', from: 'GB', to: 'MB' },
+      { label: '1 TB \u2192 GB', value: '1', from: 'TB', to: 'GB' },
     ],
   };
 
@@ -3073,8 +3108,8 @@ input:focus-visible { outline: none; }
     if (!$overlay.hidden) return;
     var isInputFocused = document.activeElement === $inputFrom || document.activeElement === $inputTo;
 
-    // 1-5 switch categories (only when not typing in input)
-    if (!isInputFocused && e.key >= '1' && e.key <= '6') {
+    // 1-8 switch categories (only when not typing in input)
+    if (!isInputFocused && e.key >= '1' && e.key <= '8') {
       var idx = parseInt(e.key, 10) - 1;
       if (idx < categoryKeys.length) {
         e.preventDefault();
