@@ -2008,7 +2008,17 @@ input:focus-visible { outline: none; }
       })
       .catch(function() {
         // Offline or timeout — use cached if available
-        if (cached) applyCurrencyRates(cached);
+        if (cached) {
+          applyCurrencyRates(cached);
+          // v19: Show last cached rate age
+          var ageMs = Date.now() - (cached.timestamp || 0);
+          var ageH = Math.floor(ageMs / 3600000);
+          var ageText = ageH < 1 ? 'less than 1 hour' : ageH + ' hour' + (ageH === 1 ? '' : 's');
+          var $text = document.getElementById('currency-info-text');
+          if ($text) $text.textContent = 'Offline \u2014 using cached rates (' + ageText + ' ago)';
+          var $dot = document.getElementById('currency-dot');
+          if ($dot) $dot.className = 'currency-info__dot currency-info__dot--offline';
+        }
       })
       .finally(function() { clearTimeout(tid); });
   }

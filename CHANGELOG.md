@@ -1,5 +1,10 @@
 # UniSwap — Changelog
 
+## v19.0 (2026-03-29) — Error Handling Hardening
+
+- **Currency API fallback**: If fetch fails, show last cached rate age (e.g., "Offline -- using cached rates (3 hours ago)")
+- SW cache bumped to `uniswap-v19`
+
 ## v18.0 (2026-03-29) — SEO / Meta Pass
 
 - **description meta**: Added missing `<meta name="description">`
