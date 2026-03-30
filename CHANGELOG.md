@@ -1,5 +1,13 @@
 # UniSwap — Changelog
 
+## v18.0 (2026-03-29) — SEO / Meta Pass
+
+- **description meta**: Added missing `<meta name="description">`
+- **theme-color**: Added `<meta name="theme-color" content="#0A84FF">`
+- **robots meta**: Added `<meta name="robots" content="index, follow">`
+- **apple-touch-icon**: Inline SVG data URL with product emoji (🔄)
+- SW cache bumped to `uniswap-v18`
+
 ## v17.0 (2026-03-29) — Accessibility Pass
 
 Feature update by Mario.
