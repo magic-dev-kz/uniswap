@@ -1,5 +1,10 @@
 # UniSwap — Changelog
 
+## v22.0 (2026-03-29) — Data Portability
+
+- **Export favorites + history as JSON**: "Экспорт" button in history section exports favorite conversions, conversion history, and pinned pair as a portable JSON backup file
+- SW cache bumped to `uniswap-v22`
+
 ## v21.0 (2026-03-29) — Speed & Data Categories
 
 - **Speed category** (7th tab, icon 🚗): km/h, mph, m/s, knots, ft/s — factor-based through m/s

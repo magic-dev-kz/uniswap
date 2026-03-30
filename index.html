@@ -1492,7 +1492,10 @@ input:focus-visible { outline: none; }
     <div class="history" id="history" hidden>
       <div class="history__header-row">
         <div class="history__header">История</div>
-        <button class="history__clear-btn" id="history-clear-btn">Очистить</button>
+        <div style="display:flex;gap:6px">
+          <button class="history__clear-btn" id="history-export-btn" style="color:var(--accent,#0A84FF)">&#128229; Экспорт</button>
+          <button class="history__clear-btn" id="history-clear-btn">Очистить</button>
+        </div>
       </div>
       <div class="history__list" id="history-list"></div>
     </div>
@@ -3398,6 +3401,26 @@ input:focus-visible { outline: none; }
   // Autofocus
   requestAnimationFrame(function() { $inputFrom.focus(); });
 
+})();
+// v22: Export favorites + history as JSON backup
+(function(){
+  var btn = document.getElementById('history-export-btn');
+  if (!btn) return;
+  btn.addEventListener('click', function() {
+    var favs = [];
+    try { var rf = localStorage.getItem('uniswap_favorites'); if (rf) favs = JSON.parse(rf); } catch(e) {}
+    var hist = [];
+    try { var rh = localStorage.getItem('uniswap_history'); if (rh) hist = JSON.parse(rh); } catch(e) {}
+    var pinned = null;
+    try { var rp = localStorage.getItem('uniswap_pinned'); if (rp) pinned = JSON.parse(rp); } catch(e) {}
+    if (!favs.length && !hist.length && !pinned) return;
+    var data = { app: 'UniSwap', version: '22.0', exported: new Date().toISOString(), favorites: favs, history: hist, pinnedPair: pinned };
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'uniswap-backup.json'; a.click();
+    setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
+  });
 })();
 if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(function(){});}
 </script>
