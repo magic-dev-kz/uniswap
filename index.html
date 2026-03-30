@@ -3285,12 +3285,18 @@ input:focus-visible { outline: none; }
   updateFavStar();
   renderFavorites();
   renderQuickPresets();
-  renderHistory();
   initOnboarding();
   updateCurrencyInfo();
   buildMultistepSelect();
-  renderCheatSheet();
   updateOfflineDisclaimer();
+
+  // v26: Defer non-critical features to not block first paint
+  var _deferInit = function(fn) {
+    if ('requestIdleCallback' in window) { requestIdleCallback(fn); }
+    else { setTimeout(fn, 100); }
+  };
+  _deferInit(function() { renderHistory(); });
+  _deferInit(function() { renderCheatSheet(); });
 
   // Prefetch currency rates in background
   fetchCurrencyRates();
@@ -3427,7 +3433,9 @@ input:focus-visible { outline: none; }
     setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
   });
 })();
-if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(function(){});}
+// v26: Defer SW registration to not block first paint
+if('requestIdleCallback' in window){requestIdleCallback(function(){if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(function(){});}});}
+else{setTimeout(function(){if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(function(){});}},100);}
 </script>
 <div class="oc-footer"><a href="https://magic-dev-kz.github.io/openclaw/" target="_blank" rel="noopener">More free tools → OpenClaw</a></div>
 </body>
