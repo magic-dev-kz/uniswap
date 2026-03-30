@@ -1,5 +1,12 @@
 # UniSwap — Changelog
 
+
+## v23.0 (2026-03-29) — Deferred Font Loading
+
+- **Non-blocking Google Fonts**: Font CSS changed from render-blocking `<link rel="stylesheet">` to `<link rel="preload" ... onload>` with `<noscript>` fallback — improves First Contentful Paint
+- SW cache bumped to `uniswap-v23`
+
+---
 ## v22.0 (2026-03-29) — Data Portability
 
 - **Export favorites + history as JSON**: "Экспорт" button in history section exports favorite conversions, conversion history, and pinned pair as a portable JSON backup file
