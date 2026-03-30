@@ -1,5 +1,10 @@
 # UniSwap — Changelog
 
+## v20.0 (2026-03-29) — Print Styles
+
+- **Print stylesheet**: `@media print` rules — hides onboarding, tabs, swap/copy/share buttons; shows current conversion result with unit labels; white bg, black text; large font for readability
+- SW cache bumped to `uniswap-v20`
+
 ## v19.0 (2026-03-29) — Error Handling Hardening
 
 - **Currency API fallback**: If fetch fails, show last cached rate age (e.g., "Offline -- using cached rates (3 hours ago)")

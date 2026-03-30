@@ -1381,6 +1381,22 @@ input:focus-visible { outline: none; }
 .skip-to-content:focus{top:8px}
 /* v17: Visible labels for inputs */
 .converter__label{display:block;font-size:0.72rem;font-weight:600;color:var(--text-secondary);margin-bottom:4px;letter-spacing:0.02em}
+
+/* === Print Styles === */
+@media print{
+  .onboarding-overlay,.onboarding-tooltip,.skip-to-content,
+  .tabs,.swap-btn,.reverse-label,.copy-result-btn,.share-btn,
+  .voice-btn,.quick-presets,.unit-overlay,.pwa-banner,.oc-footer,.toast,
+  .currency-info,.currency-offline-disclaimer,
+  button:not(.unit-pill){display:none!important}
+  body{background:#fff!important;color:#000!important;font-size:14pt}
+  .app{max-width:100%;padding:0;margin:0;background:#fff!important}
+  .converter{background:#fff!important;box-shadow:none;border:none;padding:0}
+  .converter__input,.converter__result-input{border:1px solid #ccc!important;background:#fff!important;color:#000!important;font-size:16pt}
+  .converter__label{color:#333!important}
+  .unit-pill{border:1px solid #ccc!important;background:#f5f5f5!important;color:#000!important;pointer-events:none}
+  @page{margin:2cm;size:auto}
+}
 </style>
 </head>
 <body>
